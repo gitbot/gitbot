@@ -58,7 +58,7 @@ class Engine(Application):
         help='Generates the templates and validates the stacks.')
     def validate(self, args):
         self.main(args, skip=True)
-        generator.validate_project(self.config)
+        generator.validate_stack(self.config)
         print 'Done.'
 
     @subcommand('publish', help='Publishes the stacks in the given config.')
