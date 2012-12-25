@@ -1,0 +1,34 @@
+instances:
+    - t1.micro
+    - m1.small
+    - m1.medium
+    - m1.large
+    - m1.xlarge
+    - m2.xlarge
+    - m2.2xlarge
+    - m2.4xlarge
+    - c1.medium
+    - c1.xlarge
+    - cc1.4xlarge
+amimap:
+    us-east-1:
+      amzn: ami-e565ba8c
+      bee: ami-e661c18f
+    us-west-1:
+      amzn: ami-e78cd4a2
+      bee: ami-93b5efd6
+    eu-west-1:
+      amzn: ami-f9231b8d
+      bee: ami-67212413
+    ap-southeast-1:
+      amzn: ami-be3374ec
+      bee: ami-38bef86a
+    ap-northeast-1:
+      amzn: ami-e47acbe5
+      bee: ami-16ac1f17
+    us-west-2:
+      amzn: ami-3ac64a0a
+      bee: ami-bc05898c
+    sa-east-1:
+      amzn: ami-a6855bbb
+      bee: ami-5a12cc47

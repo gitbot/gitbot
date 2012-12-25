@@ -1,0 +1,6 @@
+commando
+fswrap
+jinja2
+pyparsing
+pyyaml
+boto

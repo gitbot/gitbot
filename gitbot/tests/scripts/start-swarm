@@ -1,0 +1,5 @@
+#!/bin/bash
+/usr/bin/bees attack \
+    --url http://{ "Fn::GetAtt": [  "ElasticLoadBalancer", "DNSName"  ] }/\
+    -n { "Ref": "TotalConnections" }\
+    --concurrent { "Ref": "ConcurrentConnections" }

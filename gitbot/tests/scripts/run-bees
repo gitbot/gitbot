@@ -1,0 +1,18 @@
+#!/bin/bash
+/home/ec2-user/wait-for-elb
+if [ $? -eq 0 ]
+then
+  mkdir /home/ec2-user/swarm-results
+  /home/ec2-user/create-keypair > /home/ec2-user/swarm-results/create-keypair.log 2>&1
+  bash /home/ec2-user/create-swarm > /home/ec2-user/swarm-results/create-swarm.log 2>&1
+  sleep 45 # Allow EC2 instances to fully come up
+  bash /home/ec2-user/start-swarm > /home/ec2-user/swarm-results/start-swarm.log 2>&1
+  bash /home/ec2-user/kill-swarm > /home/ec2-user/swarm-results/kill-swarm.log 2>&1
+  /home/ec2-user/delete-keypair > /home/ec2-user/swarm-results/delete-keypair.log 2>&1
+  tar cvf /home/ec2-user/swarm-results.tar.gz /home/ec2-user/swarm-results/*
+  chown ec2-user:ec2-user -R /home/ec2-user/swarm-results
+  chown ec2-user:ec2-user /home/ec2-user/swarm-results.tar.gz
+  aws put { "Ref": "ResultBucket" }/swarm-results.tar.gz /home/ec2-user/swarm-results.tar.gz
+else
+  exit 1
+fi

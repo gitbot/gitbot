@@ -1,0 +1,10 @@
+source_dir: source
+source_patterns: '*.template'
+output_dir: tmp
+search_paths: scripts
+publish:
+    bucket: test_gitbot_publish
+    path: cfn/v1.0
+    params:
+        KeyName: beesKey
+        BeeCount: '5'

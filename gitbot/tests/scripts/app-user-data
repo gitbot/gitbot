@@ -1,0 +1,6 @@
+#!/bin/bash
+yum update -y aws-cfn-bootstrap
+/opt/aws/bin/cfn-init -v -s { "Ref": "AWS::StackName" } \
+    -r LaunchConfig --access-key { "Ref": "CfnKeys" } \
+    --secret-key { "Fn::GetAtt": ["CfnKeys", "SecretAccessKey"] } \
+    --region {  "Ref": "AWS::Region" }

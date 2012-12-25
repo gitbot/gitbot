@@ -1,0 +1,8 @@
+#!/bin/bash
+/usr/bin/bees up \
+    -k `cat /home/ec2-user/bees_keypair.txt` \
+    -s { "Ref": "BeeCount" } \
+    -z { "Fn::Select" : [ "1", { "Fn::GetAZs" : "" }] } \
+    -g { "Ref" : "BeeSecurityGroup" } \
+    --instance { "Fn::FindInMap": [ "AWSRegionPlatform2AMI", { "Ref": "AWS::Region" }, "bee"]} \
+    --login ec2-user

@@ -1,0 +1,1 @@
+A command line tool that facilitates working with the gitbot service.
