@@ -141,4 +141,4 @@ def render_project(config):
     out.make()
     for rpath, (source, target) in files.iteritems():
         render_source_file(env, config, source, target)
-    return config, env
+    return config, env, files

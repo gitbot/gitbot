@@ -5,3 +5,4 @@ search_paths: scripts
 publish:
     bucket: test_gitbot_publish
     path: cfn/v1.0
+    stack_name: test_gitbot_bees

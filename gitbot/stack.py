@@ -1,15 +1,14 @@
+from boto.cloudformation import connect_to_region
 from gitbot import generator
 from gitbot.conf import ConfigDict
 from gitbot.lib.s3 import Bucket
+from jinja2 import contextfunction, Environment
 import json
 
 
 def validate_stack(config):
-    config, env = generator.render_project(config)
-    from boto.cloudformation import connect_to_region
-
+    config, env, files = generator.render_project(config)
     cf = connect_to_region(config.region)
-    files = generator.get_source_files(config)
     for rpath, (source, target) in files.iteritems():
         if not target.exists:
             generator.render_source_file(env, config, source, target)
@@ -17,10 +16,7 @@ def validate_stack(config):
             cf.validate_template(template_body=txt)
 
 
-def get_params(config):
-    config, env = generator.render_project(config)
-    files = generator.get_source_files(config)
-
+def _get_main_stack(config, files):
     if len(files) == 1:
         main_stack = tuple(files)[0]
     else:
@@ -29,7 +25,12 @@ def get_params(config):
         except AttributeError:
             raise Exception(
                 'You must specify a `main` stack in configuration')
+    return main_stack
 
+
+def get_params(config):
+    config, env, files = generator.render_project(config)
+    main_stack = _get_main_stack(config, files)
     try:
         source, target = files[main_stack]
     except KeyError:
@@ -50,9 +51,8 @@ def get_params(config):
     return result
 
 
-def publish_stack(config):
-    config, env = generator.render_project(config)
-    files = generator.get_source_files(config)
+def upload_stack(config):
+    config, env, files = generator.render_project(config)
     bucket_name = config.publish.get('bucket', None)
     if not bucket_name:
         raise Exception(
@@ -65,13 +65,52 @@ def publish_stack(config):
         full_path = bucket.add_file(target, acl='private', target_folder=path)
         url = bucket.get_signed_url(full_path)
         result[rpath] = dict(url=url, source=source, target=target)
-    return ConfigDict(result)
+    return ConfigDict(dict(result=result, files=files, config=config))
 
 
-def create_stack(config):
-    pass
+def _transform_params(config, params, uploaded):
+    @contextfunction
+    def url(context, rpath):
+        return uploaded[rpath]['url']
+    context = dict(config=config)
+    result = []
+    env = Environment(trim_blocks=True)
+    for name, value in params.iteritems():
+        t = env.from_string(value, globals=dict(url=url))
+        result.append((name, t.render(context)))
+    return result
 
 
-def update_stack(config):
+def publish_stack(config, params, debug=False):
+    uploaded = upload_stack(config)
+    main_stack = _get_main_stack(uploaded.config, uploaded.files)
+    try:
+        stack = uploaded[main_stack]
+    except KeyError:
+        raise Exception(
+            'Cannot find the main stack[{main}]'.format(main=main_stack))
+    try:
+        stack_name = config.publish.stack_name
+    except KeyError:
+        raise Exception('Stack name is required in configuration[publish.stack_name].')
 
-    pass
+    region = config.publish.get('region', 'us-east-1')
+
+    # Connect to cloud formation and create the stack
+    cf = connect_to_region(region)
+    try:
+        cf.describe_stacks(stack_name)
+        update = True
+    except:
+        update = False
+    params = [(k, v) for k, v in params.iteritems()]
+    fn = cf.update_stack if update else cf.create_stack
+    try:
+        fn(stack_name,
+            disable_rollback=debug,
+            capabilities=['CAPABILITY_IAM'],
+            template_url=uploaded[stack]['url'],
+            parameters=params)
+    except Exception as e:
+        print json.dumps(e)
+        raise
