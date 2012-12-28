@@ -4,16 +4,14 @@ from gitbot.conf import ConfigDict
 from gitbot.lib.s3 import Bucket
 from jinja2 import contextfunction, Environment
 import json
+import time
 
 
 def validate_stack(config):
     config, env, files = generator.render_project(config)
     cf = connect_to_region(config.region)
     for rpath, (source, target) in files.iteritems():
-        if not target.exists:
-            generator.render_source_file(env, config, source, target)
-            txt = target.read_all()
-            cf.validate_template(template_body=txt)
+        cf.validate_template(template_body=target.read_all())
 
 
 def _get_main_stack(config, files):
@@ -43,7 +41,6 @@ def get_params(config):
     result = ConfigDict()
     for param, info in params.iteritems():
         value = config.publish.params.get(param, None)
-        print (param, value)
         if not value:
             value = info.get('Default', None)
         info['value'] = value
@@ -58,42 +55,55 @@ def upload_stack(config):
         raise Exception(
             'You need to provide a bucket name for publishing your stack.')
     path = config.publish.get('path', None)
+    if path:
+        path = path.rstrip('/') + '/'
     bucket = Bucket(bucket_name)
     bucket.make()
     result = {}
+    url_format = 'http://{bucket_name}.s3.amazonaws.com/{path}{template_name}'
     for rpath, (source, target) in files.iteritems():
         full_path = bucket.add_file(target, acl='private', target_folder=path)
-        url = bucket.get_signed_url(full_path)
+        signed_url = bucket.get_signed_url(full_path)
+        url = url_format.format(bucket_name=bucket_name,
+                                path=path,
+                                template_name=rpath)
         result[rpath] = dict(url=url, source=source, target=target)
     return ConfigDict(dict(result=result, files=files, config=config))
 
 
 def _transform_params(config, params, uploaded):
+
     @contextfunction
     def url(context, rpath):
-        return uploaded[rpath]['url']
+        return uploaded.result[rpath]['url']
+
     context = dict(config=config)
     result = []
     env = Environment(trim_blocks=True)
     for name, value in params.iteritems():
-        t = env.from_string(value, globals=dict(url=url))
+        t = env.from_string(value, globals=dict(url_for=url))
         result.append((name, t.render(context)))
     return result
 
 
-def publish_stack(config, params, debug=False):
+def publish_stack(config, params=None, debug=False, wait=False):
     uploaded = upload_stack(config)
+    config = uploaded.config
     main_stack = _get_main_stack(uploaded.config, uploaded.files)
     try:
-        stack = uploaded[main_stack]
+        main = uploaded.result[main_stack]
     except KeyError:
         raise Exception(
             'Cannot find the main stack[{main}]'.format(main=main_stack))
     try:
         stack_name = config.publish.stack_name
-    except KeyError:
+    except AttributeError:
         raise Exception('Stack name is required in configuration[publish.stack_name].')
 
+    defaults = get_params(config)
+    args = ConfigDict({name: info['value'] for name, info in defaults.iteritems()})
+    args.patch(params)
+    params = args
     region = config.publish.get('region', 'us-east-1')
 
     # Connect to cloud formation and create the stack
@@ -103,14 +113,43 @@ def publish_stack(config, params, debug=False):
         update = True
     except:
         update = False
-    params = [(k, v) for k, v in params.iteritems()]
+    params = _transform_params(config, params, uploaded)
+    print params
+    print uploaded
     fn = cf.update_stack if update else cf.create_stack
     try:
         fn(stack_name,
             disable_rollback=debug,
             capabilities=['CAPABILITY_IAM'],
-            template_url=uploaded[stack]['url'],
+            template_url=main['url'],
             parameters=params)
     except Exception as e:
-        print json.dumps(e)
         raise
+
+    if wait:
+        while True:
+            stacks = cf.list_stacks()
+            if any((s.stack_status == 'CREATE_IN_PROGRESS' for s in stacks)):
+                time.sleep(15)
+            else:
+                break
+
+
+def delete_stack(config, wait=False):
+    try:
+        stack_name = config.publish.stack_name
+    except KeyError:
+        raise Exception('Stack name is required in configuration[publish.stack_name].')
+
+    region = config.publish.get('region', 'us-east-1')
+
+    # Connect to cloud formation and create the stack
+    cf = connect_to_region(region)
+    cf.delete_stack(stack_name)
+    if wait:
+        while True:
+            stacks = cf.list_stacks()
+            if any((s.stack_status == 'DELETE_IN_PROGRESS' for s in stacks)):
+                time.sleep(15)
+            else:
+                break

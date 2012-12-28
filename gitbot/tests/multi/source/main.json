@@ -1,0 +1,137 @@
+{
+  "AWSTemplateFormatVersion" : "2010-09-09",
+
+  "Description" : "AWS CloudFormation Sample Template UpdateTutorial Part 1: Sample template that can be used to test EC2 updates. **WARNING** This template creates an Amazon Ec2 Instance. You will be billed for the AWS resources used if you create a stack from this template.",
+
+  "Parameters" : {
+
+    "WebServerInstanceType" : {
+      "Description" : "WebServer EC2 instance type",
+      "Type" : "String",
+      "Default" : "m1.small",
+      "AllowedValues" : [ "t1.micro","m1.small","m1.medium","m1.large","m1.xlarge","m2.xlarge","m2.2xlarge","m2.4xlarge","c1.medium","c1.xlarge","cc1.4xlarge","cc2.8xlarge","cg1.4xlarge"],
+      "ConstraintDescription" : "must be a valid EC2 instance type."
+    },
+
+    "ChildStackUrl": {
+      "Description": "URL for the uploaded child stack.",
+      "Type": "String"
+    },
+
+    "ParentStackUrl": {
+      "Description": "URL for the uploaded child stack.",
+      "Type": "String"
+    }
+  },
+
+  "Mappings" : {
+    "AWSInstanceType2Arch" : {
+      "t1.micro"    : { "Arch" : "32" },
+      "m1.small"    : { "Arch" : "32" },
+      "m1.medium"   : { "Arch" : "64" },
+      "m1.large"    : { "Arch" : "64" },
+      "m1.xlarge"   : { "Arch" : "64" },
+      "m2.xlarge"   : { "Arch" : "64" },
+      "m2.2xlarge"  : { "Arch" : "64" },
+      "m2.4xlarge"  : { "Arch" : "64" },
+      "c1.medium"   : { "Arch" : "64" },
+      "c1.xlarge"   : { "Arch" : "64" },
+      "cc1.4xlarge" : { "Arch" : "64HVM" },
+      "cc2.8xlarge" : { "Arch" : "64HVM" },
+      "cg1.4xlarge" : { "Arch" : "64HVM" }
+    },
+
+    "AWSRegionArch2AMI" : {
+      "us-east-1"      : { "32" : "ami-31814f58", "64" : "ami-1b814f72", "64HVM" : "ami-0da96764" },
+      "us-west-2"      : { "32" : "ami-38fe7308", "64" : "ami-30fe7300", "64HVM" : "NOT_YET_SUPPORTED" },
+      "us-west-1"      : { "32" : "ami-11d68a54", "64" : "ami-1bd68a5e", "64HVM" : "NOT_YET_SUPPORTED" },
+      "eu-west-1"      : { "32" : "ami-973b06e3", "64" : "ami-953b06e1", "64HVM" : "NOT_YET_SUPPORTED" },
+      "ap-southeast-1" : { "32" : "ami-b4b0cae6", "64" : "ami-beb0caec", "64HVM" : "NOT_YET_SUPPORTED" },
+      "ap-northeast-1" : { "32" : "ami-0644f007", "64" : "ami-0a44f00b", "64HVM" : "NOT_YET_SUPPORTED" },
+      "sa-east-1"      : { "32" : "ami-3e3be423", "64" : "ami-3c3be421", "64HVM" : "NOT_YET_SUPPORTED" }
+    }
+  },
+
+  "Resources" : {
+
+    "WebServerUser" : {
+      "Type" : "AWS::IAM::User",
+      "Properties" : {
+        "Path": "/",
+        "Policies": [{
+          "PolicyName": "root",
+          "PolicyDocument": { "Statement":[{
+            "Effect": "Allow",
+            "Action": [
+              "cloudformation:DescribeStackResource"
+            ],
+            "Resource": "*"
+          }]}
+        }]
+      }
+    },
+
+    "WebServerSecurityGroup" : {
+      "Type" : "AWS::EC2::SecurityGroup",
+      "Properties" : {
+        "GroupDescription" : "Enable HTTP",
+        "SecurityGroupIngress" : [
+          {"IpProtocol" : "tcp", "FromPort" : "80", "ToPort" : "80", "CidrIp" : "0.0.0.0/0"}
+        ]
+      }
+    },
+
+
+    "FirstWebServerHost": {
+      "Type" : "AWS::CloudFormation::Stack",
+      "Properties": {
+        "TemplateURL": { "Ref": "ChildStackUrl" },
+        "TimeoutInMinutes": "10",
+        "Parameters": {
+          "InstanceType": { "Ref": "WebServerInstanceType" },
+          "ImageId": { "Fn::FindInMap" : [ "AWSRegionArch2AMI", { "Ref" : "AWS::Region" }, { "Fn::FindInMap" : [ "AWSInstanceType2Arch", { "Ref" : "WebServerInstanceType" }, "Arch" ] } ] },
+          "Sound": "Hello",
+          "User": { "Ref": "WebServerUser" },
+          "SecurityGroup": { "Ref": "WebServerSecurityGroup" }
+        }
+      }
+    },
+
+    "SecondWebServerHost": {
+      "Type" : "AWS::CloudFormation::Stack",
+      "Properties": {
+        "TemplateURL": { "Ref": "ChildStackUrl" },
+        "TimeoutInMinutes": "10",
+        "Parameters": {
+          "InstanceType": { "Ref": "WebServerInstanceType" },
+          "ImageId": { "Fn::FindInMap" : [ "AWSRegionArch2AMI", { "Ref" : "AWS::Region" }, { "Fn::FindInMap" : [ "AWSInstanceType2Arch", { "Ref" : "WebServerInstanceType" }, "Arch" ] } ] },
+          "Sound": "World",
+          "User": { "Ref": "WebServerUser" },
+          "SecurityGroup": { "Ref": "WebServerSecurityGroup" }
+        }
+      }
+    },
+
+    "MainWebServerHost": {
+      "Type" : "AWS::CloudFormation::Stack",
+      "Properties" : {
+        "TemplateURL": { "Ref": "ParentStackUrl" },
+        "TimeoutInMinutes": "10",
+        "Parameters": {
+          "InstanceType": { "Ref": "WebServerInstanceType" },
+          "ImageId": { "Fn::FindInMap" : [ "AWSRegionArch2AMI", { "Ref" : "AWS::Region" }, { "Fn::FindInMap" : [ "AWSInstanceType2Arch", { "Ref" : "WebServerInstanceType" }, "Arch" ] } ] },
+          "FirstChildURL": { "Fn::GetAtt": ["FirstWebServerHost", "Outputs.WebsiteURL"] },
+          "SecondChildURL": { "Fn::GetAtt": ["SecondWebServerHost", "Outputs.WebsiteURL"] },
+          "SecurityGroup": { "Ref": "WebServerSecurityGroup" }
+        }
+      }
+    }
+  },
+
+  "Outputs" : {
+    "WebsiteURL" : {
+      "Value" : { "Fn::GetAtt": ["MainWebServerHost", "Outputs.WebsiteURL"] },
+      "Description" : "Application URL"
+    }
+  }
+}

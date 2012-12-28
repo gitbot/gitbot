@@ -5,7 +5,7 @@ import yaml
 from commando import Application, command, store, subcommand, true, version
 from fswrap import File, Folder
 
-from gitbot import generator
+from gitbot import generator, stack
 from gitbot.util import getLoggerWithConsoleHandler
 from gitbot.version import __version__
 
@@ -52,35 +52,29 @@ class Engine(Application):
         self.config['file_path'] = conf.path
         if not skip:
             generator.render_project(self.config)
-        print 'Done.'
 
     @subcommand('validate',
         help='Generates the templates and validates the stacks.')
+    @true('-i', '--interactive',
+        help="Asks for parameter overrides interactively.")
     def validate(self, args):
         self.main(args, skip=True)
-        generator.validate_stack(self.config)
-        print 'Done.'
+        stack.validate_stack(self.config)
+        print 'done.'
 
-    @subcommand('publish', help='Publishes the stacks in the given config.')
+    @subcommand('upload', help='Uploads the stack(s) in the given config.')
+    @true('-i', '--interactive',
+        help="Asks for parameter overrides interactively.")
+    def upload(self, args):
+        self.main(args, skip=True)
+        stack.publish_project(self.config)
+        print 'done.'
+
+    @subcommand('publish',
+        help='Creates or updates a stack. Always regenerates.')
+    @true('-i', '--interactive',
+        help="Asks for parameter overrides interactively.")
     def publish(self, args):
         self.main(args, skip=True)
-        generator.publish_project(self.config)
-        print 'Done.'
-
-    @subcommand('create',
-        help='Creates a new stack. Regenerates unless specified.')
-    @true('-i', '--interactive',
-        help="Asks for parameter overrides interactively.")
-    def create(self, args):
-        self.main(args, skip=True)
-        generator.create_project(self.config)
-        print 'Done.'
-
-    @subcommand('update',
-        help='Updates a stack. Regenerates unless specified.')
-    @true('-i', '--interactive',
-        help="Asks for parameter overrides interactively.")
-    def update(self, args):
-        self.main(args, skip=True)
-        generator.update_project(self.config)
-        print 'Done.'
+        stack.publish_project(self.config)
+        print 'done.'

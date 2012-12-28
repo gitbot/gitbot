@@ -28,6 +28,7 @@ class ConfigDict(defaultdict):
         return ConfigDict(self)
 
     def patch(self, overrides):
+        overrides = overrides or {}
         for key, value in overrides.iteritems():
             current = self.get(key)
             if isinstance(value, dict) and isinstance(current, dict):

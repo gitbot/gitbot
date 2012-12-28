@@ -1,0 +1,7 @@
+<?php
+$handle = fopen('{ "Ref": "FirstChildURL" }', 'rb');
+$first_part = stream_get_contents($handle);
+$handle = fopen('{ "Ref": "SecondChildURL" }', 'rb');
+$second_part = stream_get_contents($handle);
+echo($first_part . ', ' . $second_part . '!')
+?>

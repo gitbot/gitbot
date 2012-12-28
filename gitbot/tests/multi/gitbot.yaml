@@ -1,0 +1,12 @@
+source_dir: source
+source_patterns: '*.json'
+output_dir: tmp
+search_paths: scripts
+publish:
+    bucket: test_gitbot_multi_publish
+    path: cfn/v1.0
+    stack_name: test-gitbot-multi
+    main: main.json
+    params:
+        ChildStackUrl: '{{ url_for("child.json") }}'
+        ParentStackUrl: '{{ url_for("parent.json") }}'

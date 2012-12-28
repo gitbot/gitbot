@@ -8,7 +8,7 @@ from gitbot.engine import Engine
 
 def main():
     """Main"""
-    Engine().run()
+    Engine(raise_exceptions=True).run()
 
 if __name__ == "__main__":
     main()
