@@ -7,6 +7,8 @@ Use nose
 from fswrap import File
 from gitbot import stack
 
+from nose.tools import nottest
+import urllib2
 import yaml
 
 
@@ -23,10 +25,6 @@ settings['file_path'] = conf_path
 
 def teardown():
     TEMP.delete()
-    # try:
-    #     stack.delete_stack(settings, wait=True)
-    # except:
-    #     pass
 
 
 def test_validate():
@@ -34,6 +32,14 @@ def test_validate():
 
 
 # Marked as nottest to prevent this from running during every test run.
-#@nottest
+@nottest
 def test_publish_stack():
-    stack.publish_stack(settings, wait=True)
+    try:
+        stack.publish_stack(settings)
+        out = stack.get_outputs(settings, wait=True)
+        url = out['WebsiteURL']
+        response = urllib2.urlopen(url)
+        html = response.read()
+        assert html == 'Hello, World!'
+    finally:
+        stack.delete_stack(settings, wait=True)

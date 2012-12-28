@@ -114,8 +114,6 @@ def publish_stack(config, params=None, debug=False, wait=False):
     except:
         update = False
     params = _transform_params(config, params, uploaded)
-    print params
-    print uploaded
     fn = cf.update_stack if update else cf.create_stack
     try:
         fn(stack_name,
@@ -127,29 +125,49 @@ def publish_stack(config, params=None, debug=False, wait=False):
         raise
 
     if wait:
-        while True:
-            stacks = cf.list_stacks()
-            if any((s.stack_status == 'CREATE_IN_PROGRESS' for s in stacks)):
-                time.sleep(15)
-            else:
-                break
+        __wait_while_status(cf, 'CREATE_IN_PROGRESS')
+
+
+def __wait_while_status(cf, status):
+
+    while True:
+        stacks = cf.list_stacks()
+        if any((s.stack_status == status for s in stacks)):
+            time.sleep(15)
+        else:
+            break
+
+
+def get_outputs(config, wait=False):
+    publish = config['publish']
+    try:
+        stack_name = publish['stack_name']
+    except KeyError:
+        raise Exception('Stack name is required in configuration[publish.stack_name].')
+
+    region = publish.get('region', 'us-east-1')
+
+    # Connect to cloud formation and create the stack
+    cf = connect_to_region(region)
+    if wait:
+        __wait_while_status(cf, 'CREATE_IN_PROGRESS')
+    try:
+        result = cf.describe_stacks(stack_name)
+    except:
+        return False
+    return {output.key: output.value for stack in result for output in stack.outputs}
 
 
 def delete_stack(config, wait=False):
     try:
-        stack_name = config.publish.stack_name
+        stack_name = config['publish']['stack_name']
     except KeyError:
         raise Exception('Stack name is required in configuration[publish.stack_name].')
 
-    region = config.publish.get('region', 'us-east-1')
+    region = config['publish'].get('region', 'us-east-1')
 
     # Connect to cloud formation and create the stack
     cf = connect_to_region(region)
     cf.delete_stack(stack_name)
     if wait:
-        while True:
-            stacks = cf.list_stacks()
-            if any((s.stack_status == 'DELETE_IN_PROGRESS' for s in stacks)):
-                time.sleep(15)
-            else:
-                break
+        __wait_while_status(cf, 'DELETE_IN_PROGRESS')

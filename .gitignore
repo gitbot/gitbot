@@ -16,3 +16,4 @@ PYSMELLTAGS
 *.tar.gz
 src
 tmp
+gitbot/tests/lib/data
