@@ -22,7 +22,7 @@ def teardown_module():
 @nottest
 def bucket_name():
     global _bucket_name
-    _bucket_name = 'lakshmivyas.rman.s3.testbucket' + str(hash(time.time()))
+    _bucket_name = 'lakshmivyas.gitbot.s3.testbucket' + str(hash(time.time()))
     return _bucket_name
 
 
@@ -33,11 +33,7 @@ def cleanup():
     bucket = Bucket(_bucket_name)
     try:
         bucket.connect()
-        if not bucket.bucket:
-            return
-        for key in bucket.bucket.list():
-            key.delete()
-        bucket.delete()
+        bucket.delete(recurse=True)
     except:
         pass
     data_folder.delete()

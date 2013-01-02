@@ -5,6 +5,43 @@ import logging
 import sys
 
 from logging import NullHandler
+from subprocess import check_call, check_output, PIPE, Popen
+
+
+class CommandBuilder(object):
+    """
+    Provides a better interface for calling shell commands. Wraps `subprocess`.
+    """
+
+    def __init__(self, cwd=None, cmd=None):
+        self.cwd = cwd
+        self.cmd = cmd
+
+    def __process__(self, *args, **kwargs):
+
+        if self.cmd and not kwargs.get('shell', False):
+            new_args = [self.cmd]
+            new_args.extend(args)
+            args = new_args
+
+        args = [arg for arg in args if arg]
+
+        if self.cwd and 'cwd' not in kwargs:
+            kwargs['cwd'] = self.cwd
+
+        return (args, kwargs)
+
+    def call(self, *args, **kwargs):
+        args, kwargs = self.__process__(*args, **kwargs)
+        return check_call(args, **kwargs)
+
+    def get(self, *args, **kwargs):
+        args, kwargs = self.__process__(*args, **kwargs)
+        return check_output(args, **kwargs)
+
+    def open(self, *args, **kwargs):
+        args, kwargs = self.__process__(*args, **kwargs)
+        return Popen(args, **kwargs)
 
 
 def getLoggerWithConsoleHandler(logger_name):

@@ -51,8 +51,11 @@ class Bucket(object):
     def make(self):
         self.bucket = self.connection.create_bucket(self.bucket_name)
 
-    def delete(self):
+    def delete(self, recurse=False):
         if self.bucket:
+            if recurse:
+                keys = self.bucket.list()
+                self.bucket.delete_keys([key.name for key in keys])
             self.bucket.delete()
         self.bucket = None
 

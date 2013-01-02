@@ -75,7 +75,8 @@ def _transform_params(config, params, uploaded):
 
     @contextfunction
     def url(context, rpath):
-        return uploaded.result[rpath]['url']
+        print uploaded
+        return uploaded[rpath]['url']
 
     context = dict(config=config)
     result = []
