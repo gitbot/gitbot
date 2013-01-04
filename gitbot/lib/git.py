@@ -28,7 +28,6 @@ class Tree(object):
         modified = self.git.get('log',
                                 ref or 'HEAD',
                                 '-1', '--pretty=format:%ad', '--date=local')
-        print modified
         return datetime.strptime(modified, '%a %b %d %H:%M:%S %Y')
 
     def ensure_repo_exists(self):
@@ -66,8 +65,10 @@ class Tree(object):
         self.git.call('clone',
                         self.repo,
                         self.source.name,
-                        '--depth 1' if tip_only else None,
-                        '--branch %s' % self.branch_name if tip_only else None,
+                        '--depth' if tip_only else None,
+                        '1' if tip_only else None,
+                        '--branch' if tip_only else None,
+                        self.branch_name if tip_only else None,
                         cwd=self.source.parent.path)
         self.checkout()
 

@@ -1,17 +1,18 @@
-from fswrap import File
+from fswrap import File, Folder
 from gitbot.util import CommandBuilder
 
 
-def gen(source, data):
+def gen(source, data, target=None):
     source_command = CommandBuilder(cwd=source.path)
-    if File(source.child('requirements.txt')).exists:
+    if source.child_file('requirements.txt').exists:
         source_command.call('pip', 'install', '-r', 'requirements.txt')
-    if File(source.child('package.json')).exists:
+    if source.child_file('package.json').exists:
         source_command.call('npm', 'install')
     # Generate
-    dist = source.parent.child_folder('dist/www')
+    target = target or source.parent.child('dist/www')
+    dist = Folder(target)
     dist.make()
-    config = File(source.child(data.config or 'prod.yaml'))
+    config = source.child_file(data.config or 'prod.yaml')
     txt = config.read_all()
     config.write(txt.format(data=data))
     source_command.call('hyde',

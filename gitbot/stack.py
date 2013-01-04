@@ -11,7 +11,13 @@ def validate_stack(config):
     config, env, files = generator.render_project(config)
     cf = connect_to_region(config.region)
     for rpath, (source, target) in files.iteritems():
-        cf.validate_template(template_body=target.read_all())
+        try:
+            cf.validate_template(template_body=target.read_all())
+        except Exception, e:
+            print 'Validation failed for template: [%s]' % rpath
+            print e.error_message
+            return (False, False, False)
+    return config, env, files
 
 
 def _get_main_stack(config, files):
@@ -49,7 +55,9 @@ def get_params(config):
 
 
 def upload_stack(config):
-    config, env, files = generator.render_project(config)
+    config, env, files = validate_stack(config)
+    if not config:
+        raise Exception('Invalid template.')
     bucket_name = config.publish.get('bucket', None)
     if not bucket_name:
         raise Exception(
@@ -71,19 +79,21 @@ def upload_stack(config):
     return ConfigDict(dict(result=result, files=files, config=config))
 
 
-def _transform_params(config, params, uploaded):
+def _transform_params(context, params, uploaded):
 
     @contextfunction
     def url(context, rpath):
-        print uploaded
         return uploaded[rpath]['url']
 
-    context = dict(config=config)
     result = []
     env = Environment(trim_blocks=True)
     for name, value in params.iteritems():
-        t = env.from_string(value, globals=dict(url_for=url))
-        result.append((name, t.render(context)))
+        try:
+            t = env.from_string(value, globals=dict(url_for=url))
+            result.append((name, t.render(context)))
+        except:
+            raise Exception(
+                'Cannot transform param [%s] with value [%s]' % (name, value))
     return result
 
 
@@ -114,7 +124,9 @@ def publish_stack(config, params=None, debug=False, wait=False):
         update = True
     except:
         update = False
-    params = _transform_params(config, params, uploaded)
+
+    params = _transform_params(config.flatten(), params, uploaded.result)
+
     fn = cf.update_stack if update else cf.create_stack
     try:
         fn(stack_name,

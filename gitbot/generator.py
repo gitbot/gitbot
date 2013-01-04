@@ -28,6 +28,9 @@ class Config(AutoProp):
             self.data = ConfigDict(data)
         self.default_search_paths = [os.getcwd()]
 
+    def flatten(self):
+        return dict(self.data)
+
     @AutoProp.default
     def publish(self):
         return self.data.get('publish', None)
