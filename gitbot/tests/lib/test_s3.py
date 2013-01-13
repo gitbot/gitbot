@@ -61,6 +61,7 @@ def test_website():
     html = response.read()
     assert html == content
 
+
 @with_setup(cleanup)
 def test_signed_url():
     bucket = new_bucket()

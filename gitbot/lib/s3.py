@@ -25,10 +25,10 @@ PUBLIC_POLICY_TEMPLATE = '''
 
 class Bucket(object):
 
-    def __init__(self, bucket_name):
+    def __init__(self, bucket_name, **kwargs):
         self.bucket_name = bucket_name
         try:
-            self.connection = S3Connection()
+            self.connection = S3Connection(**kwargs)
         except:
             raise Exception(
                 'Please setup AWS security credentials in your environment.'
