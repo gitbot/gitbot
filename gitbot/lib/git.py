@@ -1,8 +1,8 @@
+from commando.util import ShellCommand, getLoggerWithConsoleHandler
+from contextlib import contextmanager
 from datetime import datetime
 from fswrap import Folder
 
-from contextlib import contextmanager
-from gitbot.util import CommandBuilder, getLoggerWithConsoleHandler
 
 logger = getLoggerWithConsoleHandler('gitbot.lib.git')
 
@@ -17,7 +17,7 @@ class Tree(object):
         self.remote = remote
         self.branch_name = branch
         self.tagger = Tagger(self)
-        self.git = CommandBuilder(cwd=self.source.path, cmd='git')
+        self.git = ShellCommand(cwd=self.source.path, cmd='git')
 
     def get_revision(self, ref=None):
         self.ensure_source_exists()
@@ -164,7 +164,7 @@ class Tagger(object):
         if not tree:
             raise Exception('You must provide a valid tree object')
         self.tree = tree
-        self.git = CommandBuilder(cwd=self.tree.source.path, cmd='git')
+        self.git = ShellCommand(cwd=self.tree.source.path, cmd='git')
 
     def check(self, tag):
         self.tree.ensure_source_exists()

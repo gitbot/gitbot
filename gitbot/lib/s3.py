@@ -1,9 +1,8 @@
 from boto.s3.connection import S3Connection
 from boto.s3.key import Key
+from commando.util import getLoggerWithConsoleHandler
 from fnmatch import fnmatch
 from fswrap import File, Folder
-from gitbot.util import getLoggerWithConsoleHandler
-
 
 logger = getLoggerWithConsoleHandler('gitbot.lib.s3')
 

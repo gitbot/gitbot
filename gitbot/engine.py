@@ -1,4 +1,3 @@
-import logging
 import os
 import yaml
 
@@ -6,35 +5,10 @@ from commando import Application, command, store, subcommand, true, version
 from fswrap import File, Folder
 
 from gitbot import generator, stack
-from gitbot.util import getLoggerWithConsoleHandler
 from gitbot.version import __version__
-
-logger = getLoggerWithConsoleHandler('gitbot')
 
 
 class Engine(Application):
-
-    def __init__(self, raise_exceptions=False):
-        self.raise_exceptions = raise_exceptions
-        super(Engine, self).__init__()
-
-    def run(self, args=None):
-        """
-        The engine entry point.
-        """
-
-        # Catch any errors thrown and log the message.
-
-        try:
-            super(Engine, self).run(args)
-        except Exception, e:
-            if self.raise_exceptions:
-                raise
-            elif self.__parser__:
-                self.__parser__.error(e.message)
-            else:
-                logger.error(e.message)
-                return -1
 
     @command(description='gitbot - gitbot toolkit',
         epilog='Use %(prog)s {command} -h to get help on individual commands')
@@ -42,8 +16,6 @@ class Engine(Application):
     @version('--version', version='%(prog)s ' + __version__)
     @store('-c', '--config', default='project.yaml', help="Config file")
     def main(self, args, skip=False):
-        if args.verbose:
-            logger.setLevel(logging.DEBUG)
         conf = File(Folder(os.getcwd()).child(args.config))
         if not conf.exists:
             raise Exception(

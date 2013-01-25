@@ -1,9 +1,9 @@
-from fswrap import File, Folder
-from gitbot.util import CommandBuilder
+from commando.util import ShellCommand
+from fswrap import Folder
 
 
 def gen(source, data, target=None):
-    source_command = CommandBuilder(cwd=source.path)
+    source_command = ShellCommand(cwd=source.path)
     if source.child_file('requirements.txt').exists:
         source_command.call('pip', 'install', '-r', 'requirements.txt')
     if source.child_file('package.json').exists:

@@ -1,12 +1,11 @@
+from commando.conf import AutoProp, ConfigDict
 import fnmatch
-import json
-import os
-
 from fswrap import File, Folder
+from gitbot import splitter
 from jinja2 import (contextfunction, contextfilter,
                     Environment, FileSystemLoader, Markup)
-from gitbot import splitter
-from gitbot.conf import AutoProp, ConfigDict
+import json
+import os
 
 
 def extappend(l, stuff):
