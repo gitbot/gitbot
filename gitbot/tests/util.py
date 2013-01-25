@@ -1,5 +1,8 @@
 import difflib
+from itertools import izip
 import json
+import yaml
+
 
 
 def assert_text_equals(first, second, msg=None):
@@ -24,3 +27,35 @@ def assert_json_equals(actual, expected, msg=None):
     assert_text_equals(
         json.dumps(json.loads(actual), sort_keys=True),
         json.dumps(json.loads(expected), sort_keys=True))
+
+
+def assert_yaml_equals(actual, expected, msg=None):
+    assert_text_equals(
+        yaml.dump(actual, default_flow_style=True),
+        yaml.dump(expected, default_flow_style=True))
+
+
+def compare(wish, reality):
+    if isinstance(wish, (list, tuple, set)):
+        return seq_compare(wish, reality)
+    if isinstance(wish, dict):
+        return dict_compare(wish, reality)
+    return wish == reality
+
+
+def seq_compare(expected, actual):
+    for wish, reality in izip(expected, actual):
+        if not compare(wish, reality):
+            print 'diff found. [%s] is different from [%s]' % (wish, reality)
+            return False
+    return True
+
+
+def dict_compare(wish, reality):
+    for key, value in wish:
+        expected = value
+        actual = reality[key]
+        if not compare(expected, actual):
+            print 'diff found. [%s] is different from [%s]' % (wish, reality)
+            return False
+    return True
