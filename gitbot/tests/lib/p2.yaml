@@ -1,0 +1,9 @@
+patches: p1.yaml
+config:
+    env: stage
+    branch: stage
+projects:
+    comp2:
+        version_type: beta
+    comp3:
+        version_type: beta

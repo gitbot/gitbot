@@ -1,8 +1,15 @@
 import difflib
 from itertools import izip
 import json
+from operator import itemgetter
 import yaml
 
+
+def assert_dotted_key_matches(key, wish, reality):
+    parts = key.split('.')
+    expected = reduce(lambda d, part: d[part], parts, wish)
+    actual = reduce(lambda d, part: d[part], parts, reality)
+    assert expected == actual
 
 
 def assert_text_equals(first, second, msg=None):
@@ -52,7 +59,7 @@ def seq_compare(expected, actual):
 
 
 def dict_compare(wish, reality):
-    for key, value in wish:
+    for key, value in wish.iteritems():
         expected = value
         actual = reality[key]
         if not compare(expected, actual):

@@ -1,0 +1,9 @@
+patches: p0.yaml
+config:
+    env: dev
+    branch: dev
+projects:
+    comp2:
+        version_type: build
+    comp1:
+        version_type: build

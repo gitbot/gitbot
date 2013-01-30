@@ -1,0 +1,10 @@
+config:
+        env: prod
+        repo_base: git@github.com:rman
+projects:
+    comp1:
+        version_type: public
+    comp2:
+        version_type: public
+    comp3:
+        version_type: public
