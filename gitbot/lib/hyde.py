@@ -1,6 +1,6 @@
 from commando.util import ShellCommand
 from fswrap import Folder
-from gitbot.yinja import transform
+from gitbot.lib.yinja import transform
 
 
 def gen(source, data, target=None):
@@ -17,11 +17,11 @@ def gen(source, data, target=None):
 
 
     template = source.child_file(data.config_template or 'env.yaml')
-    target = source.child_file(data.config_file_name or 'setttings.gitbot')
-    transform(source, target, data)
+    conf = source.child_file(data.config_file_name or 'settings.gitbot')
+    transform(source, conf, data)
 
     source_command.call('hyde',
                             'gen', '-r',
-                            '-c', target.name,
+                            '-c', conf.name,
                             '-d', dist.path)
     return dist
