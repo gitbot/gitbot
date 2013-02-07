@@ -90,7 +90,7 @@ class Tree(object):
         self.branch_name = old_branch
         self.checkout()
 
-    def pull(self):
+    def pull(self, tip_only=False):
         if self.source.exists:
             if self.has_changes(check_remote=False):
                 raise Exception(
@@ -98,7 +98,7 @@ class Tree(object):
             logger.info('Pulling remote changes ...')
             self.git.call('pull', self.remote, self.branch_name)
         else:
-            self.clone()
+            self.clone(tip_only=tip_only)
 
     def fetch(self):
         self.ensure_source_exists()
