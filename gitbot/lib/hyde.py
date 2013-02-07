@@ -18,7 +18,7 @@ def gen(source, data, target=None):
 
     template = source.child_file(data.config_template or 'env.yaml')
     conf = source.child_file(data.config_file_name or 'settings.gitbot')
-    transform(source, conf, data)
+    transform(template, conf, data)
 
     source_command.call('hyde',
                             'gen', '-r',
