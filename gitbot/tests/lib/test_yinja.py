@@ -1,7 +1,7 @@
 from commando.conf import ConfigDict
 from fswrap import File, Folder
 from functools import reduce
-from gitbot.lib.yinja import load
+from gitbot.lib.yinja import load, transform
 import tempfile
 from util import compare, assert_dotted_key_matches
 import yaml
@@ -50,6 +50,40 @@ yinja:
 '''
     env = dict(globals=dict(url=url))
     result = load(yaml_text, context, jinja_env=env, patchable=False)
+    result = result['yinja']
+    assert result['text'] == 'project'
+    assert result['text2'] == 'version'
+    assert result['url'] == 'http://example.com/yinja/5.0.1/'
+
+
+def test_function_with_transform():
+    
+    from jinja2 import contextfunction
+
+    @contextfunction
+    def url(context, base):
+        return base + '/' + context['project'] + '/' + context['version'] + '/'
+
+    context = {
+            "version": "5.0.1",
+            "project": "yinja"
+        }
+    
+    yaml_text = \
+'''
+yinja:
+    text: project
+    text2: version
+    url: {{ url ('http://example.com') }}
+'''
+    env = dict(globals=dict(url=url))
+    target = TEMP.child_file('test_function_with_transform')
+    target.delete()
+    result_path = transform(yaml_text, target.path, context, jinja_env=env)
+    assert result_path
+    result_path = File(result_path)
+    assert result_path.exists
+    result = yaml.load(result_path.read_all())
     result = result['yinja']
     assert result['text'] == 'project'
     assert result['text2'] == 'version'
