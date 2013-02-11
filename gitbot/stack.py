@@ -151,15 +151,7 @@ def __wait_while_status(cf, status):
             break
 
 
-def get_outputs(config, wait=False):
-    publish = config['publish']
-    try:
-        stack_name = publish['stack_name']
-    except KeyError:
-        raise Exception('Stack name is required in configuration[publish.stack_name].')
-
-    region = publish.get('region', 'us-east-1')
-
+def get_outputs(stack_name, region='us-east-1', wait=False):
     # Connect to cloud formation and create the stack
     cf = connect_to_region(region)
     if wait:
@@ -171,14 +163,7 @@ def get_outputs(config, wait=False):
     return {output.key: output.value for stack in result for output in stack.outputs}
 
 
-def delete_stack(config, wait=False):
-    try:
-        stack_name = config['publish']['stack_name']
-    except KeyError:
-        raise Exception('Stack name is required in configuration[publish.stack_name].')
-
-    region = config['publish'].get('region', 'us-east-1')
-
+def delete_stack(stack_name, region='us-east-1', wait=False):
     # Connect to cloud formation and create the stack
     cf = connect_to_region(region)
     cf.delete_stack(stack_name)

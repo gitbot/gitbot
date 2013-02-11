@@ -34,12 +34,13 @@ def test_validate():
 # Marked as nottest to prevent this from running during every test run.
 @nottest
 def test_publish_stack():
+    stack_name = settings['publish']['stack_name']
     try:
         stack.publish_stack(settings)
-        out = stack.get_outputs(settings, wait=True)
+        out = stack.get_outputs(stack_name, wait=True)
         url = out['WebsiteURL']
         response = urllib2.urlopen(url)
         html = response.read()
         assert html == 'Hello, World!'
     finally:
-        stack.delete_stack(settings, wait=True)
+        stack.delete_stack(stack_name, wait=True)
