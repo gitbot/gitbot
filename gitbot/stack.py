@@ -5,6 +5,7 @@ from gitbot.lib.s3 import Bucket
 from jinja2 import contextfunction, Environment
 import json
 import time
+import yaml
 
 
 def validate_stack(config):
@@ -98,6 +99,9 @@ def _transform_params(context, params, uploaded):
 
 
 def publish_stack(config, params=None, debug=False, wait=False):
+    if isinstance(config, File):
+        config = yaml.load(config.read_all())
+        config['file_path'] = config.path
     uploaded = upload_stack(config)
     config = uploaded.config
     main_stack = _get_main_stack(uploaded.config, uploaded.files)
