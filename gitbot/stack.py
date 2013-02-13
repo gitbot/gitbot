@@ -1,5 +1,6 @@
 from boto.cloudformation import connect_to_region
 from commando.conf import ConfigDict
+from fswrap import File
 from gitbot import generator
 from gitbot.lib.s3 import Bucket
 from jinja2 import contextfunction, Environment
