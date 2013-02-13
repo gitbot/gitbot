@@ -101,8 +101,9 @@ def _transform_params(context, params, uploaded):
 
 def publish_stack(config, params=None, debug=False, wait=False):
     if isinstance(config, File):
+        file_path = config.path
         config = yaml.load(config.read_all())
-        config['file_path'] = config.path
+        config['file_path'] = file_path
     uploaded = upload_stack(config)
     config = uploaded.config
     main_stack = _get_main_stack(uploaded.config, uploaded.files)
