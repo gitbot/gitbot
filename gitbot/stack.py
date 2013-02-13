@@ -138,7 +138,8 @@ def publish_stack(config, params=None, debug=False, wait=False):
         raise
 
     if wait:
-        __wait_while_status(cf, 'CREATE_IN_PROGRESS')
+        __wait_while_status(cf, 
+            'CREATE_IN_PROGRESS' if update else 'UPDATE_IN_PROGRESS')
 
 
 def __wait_while_status(cf, status):

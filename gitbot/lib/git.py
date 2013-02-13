@@ -32,15 +32,18 @@ class Tree(object):
 
     def ensure_repo_exists(self):
         if not self.repo:
-            raise Exception('This tree does not have a repo.')
+            raise Exception('This tree [%s] does not have a repo.' 
+                                % self.source.path)
 
     def ensure_source_exists(self):
         if not self.source.exists:
-            raise Exception('The source directory is missing.')
+            raise Exception('The source directory [%s] is missing.' 
+                                % self.source.path)
 
     def ensure_source_does_not_exist(self):
         if self.source.exists:
-            raise Exception('The source directory exists already.')
+            raise Exception('The source directory [%s] exists already.' 
+                                % self.source.path)
 
     def make(self, bare=False):
         self.ensure_source_exists()
@@ -94,7 +97,8 @@ class Tree(object):
         if self.source.exists:
             if self.has_changes(check_remote=False):
                 raise Exception(
-                    'Source has changes. Please sync it with the remote.')
+                    'Source [%s] has changes. Please sync it with the remote.'
+                        % self.source)
             logger.info('Pulling remote changes ...')
             self.git.call('pull', self.remote, self.branch_name)
         else:
