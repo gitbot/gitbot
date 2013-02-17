@@ -72,13 +72,14 @@ def grammar():
                                     aws('AWS') +
                                     Suppress(LineEnd())
                                 ).setParseAction(translate)
-    script_line_containing_aws = (
-                                    Optional(script_stuff('Script')) +
-                                    aws('AWS') +
+    aws_script_start = Optional(script_stuff('Script')) + aws('AWS')
+    script_line_containing_aws = aws_script_start + script_line
+    script_line_containing_many_aws = (
+                                    OneOrMore(aws_script_start) +
                                     script_line)
     line = Group(
                     script_line_ending_with_aws('AWSEnd') |
-                    script_line_containing_aws |
+                    script_line_containing_many_aws |
                     script_line
                 ).setParseAction(process_line)
 

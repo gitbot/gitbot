@@ -60,6 +60,17 @@ def some_function():
     out = splitter.split(txt)
     assert_text_equals(out, split)
 
+def test_process_text_with_two_refs():
+    txt = \
+'http://nodejs.org/dist/v{ "Ref": "NodeJSVersion" }/node-v{ "Ref": "NodeJSVersion" }.tar.gz'
+    split = \
+'''{"Fn::Join": ["", [
+    "http://nodejs.org/dist/v", {"Ref": "NodeJSVersion"}, "/node-v", {"Ref": "NodeJSVersion"}, ".tar.gz\\n"
+]]}
+'''
+    out = splitter.split(txt)
+    assert_text_equals(out, split)    
+
 
 def test_create_swarm():
     txt = \
