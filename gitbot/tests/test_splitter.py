@@ -65,10 +65,10 @@ def test_process_text_with_two_refs():
 'http://nodejs.org/dist/v{ "Ref": "NodeJSVersion" }/node-v{ "Ref": "NodeJSVersion" }.tar.gz'
     split = \
 '''{"Fn::Join": ["", [
-    "http://nodejs.org/dist/v", {"Ref": "NodeJSVersion"}, "/node-v", {"Ref": "NodeJSVersion"}, ".tar.gz\\n"
+    "http://nodejs.org/dist/v", {"Ref": "NodeJSVersion"}, "/node-v", {"Ref": "NodeJSVersion"}, ".tar.gz"
 ]]}
 '''
-    out = splitter.split(txt)
+    out = splitter.split(txt, append_line_break=False)
     assert_text_equals(out, split)    
 
 

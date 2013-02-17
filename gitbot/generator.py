@@ -78,10 +78,10 @@ class Config(AutoProp):
 
 
 @contextfunction
-def contents(context, file_name):
+def contents(context, file_name, append_line_break=True):
     template = context.environment.get_template(file_name)
     txt = template.render(context)
-    return splitter.split(txt)
+    return splitter.split(txt, append_line_break)
 
 
 @contextfilter

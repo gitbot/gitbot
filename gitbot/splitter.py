@@ -21,11 +21,11 @@ def _translate_token(t):
     if name == 'ScriptEnd':
         combined += '\n'
 
-    if name == 'Script' or name == 'ScriptEnd':
+    if name == 'Script' or name == 'ScriptEnd' or name == 'ScriptEndNLB':
         res = json.dumps(combined)
         res += ', '
 
-        if name == 'ScriptEnd':
+        if name == 'ScriptEnd' or name == 'ScriptEndNLB':
             res = res.rstrip(' ')
 
     elif name == 'AWS':
@@ -41,7 +41,7 @@ def translate(s, l, t):
 def process_line(s, l, t):
     return ''.join(chain.from_iterable(t)) + '\n'
 
-def grammar():
+def grammar(append_line_break=True):
     REF = Combine(Literal('"Ref"'))
     FN = Combine(Literal('"Fn::') + Word(alphanums) + Literal('"'))
 
@@ -66,7 +66,8 @@ def grammar():
                             ZeroOrMore(White()) +
                             SkipTo(term)
                         ).setParseAction(translate)
-    script_line = script_stuff('ScriptEnd') + ~aws_start + Suppress(LineEnd())
+    script_end = 'ScriptEnd' if append_line_break else 'ScriptEndNLB'
+    script_line = script_stuff(script_end) + ~aws_start + Suppress(LineEnd())
     script_line_ending_with_aws = (
                                     Optional(script_stuff('Script')) +
                                     aws('AWS') +
@@ -86,8 +87,8 @@ def grammar():
     return OneOrMore(line('Line'))
 
 
-def split(txt):
-    script = grammar()
+def split(txt, append_line_break=True):
+    script = grammar(append_line_break)
     toks = script.parseString(txt)
     result = '{"Fn::Join": ["", [\n'
     content = ''.join(toks)
