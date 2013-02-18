@@ -48,5 +48,5 @@ class Engine(Application):
         help="Asks for parameter overrides interactively.")
     def publish_stack(self, args):
         self.main(args, skip=True)
-        stack.publish_project(self.config)
+        stack.publish_stack(self.config)
         print 'done.'
