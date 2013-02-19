@@ -20,7 +20,7 @@ class Tree(object):
         self.git = ShellCommand(cwd=self.source.path, cmd='git')
 
     def get_revision_remote(self):
-        out = self.git.get('ls-remote', self.repo, self.branch_name)
+        out = self.git.get('ls-remote', self.repo, self.branch_name, cwd='.')
         return out.split()[0]
 
     def get_revision(self, ref=None, short=True):
