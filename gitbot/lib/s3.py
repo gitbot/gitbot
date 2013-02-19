@@ -44,8 +44,10 @@ class Bucket(object):
     def connect(self):
         try:
             self.bucket = self.connection.get_bucket(self.bucket_name)
+            return True
         except:
             self.bucket = None
+            return False
 
     def make(self):
         self.bucket = self.connection.create_bucket(self.bucket_name)
