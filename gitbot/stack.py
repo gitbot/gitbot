@@ -1,4 +1,5 @@
 from boto.cloudformation import connect_to_region
+from boto.exception import BotoServerError
 from commando.conf import ConfigDict
 from fswrap import File
 from gitbot import generator
@@ -151,7 +152,7 @@ def publish_stack(config, params=None, debug=False, wait=False):
             raise bse
 
         if message == 'No updates are to be performed.':
-            print 'Stack is already up to date'
+            print 'Stack is already up to date.'
             wait = False
         else:
             raise bse
