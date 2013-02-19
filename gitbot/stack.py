@@ -140,6 +140,12 @@ def publish_stack(config, params=None, debug=False, wait=False):
             capabilities=['CAPABILITY_IAM'],
             template_url=main['url'],
             parameters=params)
+    except BotoServerError as bse:
+        if bse.error_message['Message'] == 'No updates are to be performed.':
+            # Stack is already up to date
+            print 'Stack is already up to date'
+        else:
+            raise
     except Exception as e:
         raise
 
