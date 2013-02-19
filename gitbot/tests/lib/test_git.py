@@ -12,6 +12,7 @@ import tempfile
 
 TEMP = tempfile.gettempdir()
 GIT_REMOTE_DIR = Folder(TEMP).child_folder('repos/remote')
+GIT_REMOTE = 'file:///' + GIT_REMOTE_DIR.path
 GIT_TEST_DIR1 = Folder(TEMP).parent.child_folder('repos/local1')
 GIT_TEST_DIR2 = Folder(TEMP).parent.child_folder('repos/local2')
 
@@ -57,13 +58,13 @@ def setup_module():
     js.parent.make()
     js.write(JS)
 
-    local_repo1 = Tree(GIT_TEST_DIR1, 'file:///' + GIT_REMOTE_DIR.path)
+    local_repo1 = Tree(GIT_TEST_DIR1, GIT_REMOTE)
     local_repo1.make()
     local_repo1.add_remote()
     local_repo1.commit("Initial commit")
     local_repo1.push(set_upstream=True)
 
-    local_repo2 = Tree(GIT_TEST_DIR2, 'file:///' + GIT_REMOTE_DIR.path)
+    local_repo2 = Tree(GIT_TEST_DIR2, GIT_REMOTE)
     local_repo2.clone()
 
 
@@ -101,6 +102,13 @@ def test_fetch():
         assert css == new_css
         assert local_repo2.get_revision() == revision
         assert local_repo2.get_last_committed() == modified
+
+@with_setup(teardown=clean)
+def test_get_revision_remote():
+    test_tree = Tree(GIT_TEST_DIR2, GIT_REMOTE)
+    remote_rev = test_tree.get_revision_remote()
+    local_rev = local_repo1.get_revision(short=False)
+    assert remote_rev == local_rev
 
 
 @with_setup(teardown=reset)

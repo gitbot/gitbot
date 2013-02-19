@@ -19,9 +19,15 @@ class Tree(object):
         self.tagger = Tagger(self)
         self.git = ShellCommand(cwd=self.source.path, cmd='git')
 
-    def get_revision(self, ref=None):
+    def get_revision_remote(self):
+        out = self.git.get('ls-remote', self.repo, self.branch_name)
+        return out.split()[0]
+
+    def get_revision(self, ref=None, short=True):
         self.ensure_source_exists()
-        return self.git.get('rev-parse', '--short', ref or 'HEAD')
+        return self.git.get('rev-parse', 
+            '--short' if short else '', 
+            ref or 'HEAD').strip()
 
     def get_last_committed(self, ref=None):
         self.ensure_source_exists()
