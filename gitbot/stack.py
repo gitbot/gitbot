@@ -141,13 +141,20 @@ def publish_stack(config, params=None, debug=False, wait=False):
             template_url=main['url'],
             parameters=params)
     except BotoServerError as bse:
-        if bse.error_message['Message'] == 'No updates are to be performed.':
-            # Stack is already up to date
+        try:
+            error = json.loads(bse.error_message)
+        except:
+            raise bse
+        try:
+            message = error['Error']['Message']
+        except KeyError:
+            raise bse
+
+        if message == 'No updates are to be performed.':
             print 'Stack is already up to date'
+            wait = False
         else:
-            raise
-    except Exception as e:
-        raise
+            raise bse
 
     if wait:
         __wait_while_status(cf, 
