@@ -3,4 +3,5 @@ fswrap
 jinja2
 pyparsing
 pyyaml
+requests
 boto
