@@ -16,12 +16,12 @@ def list_hooks(orgOrUser, repoOrRepos, hook_type=None):
         for hook in res:
             if not hook_type or hook['name'] == hook_type:
                 hooks.append(dict(
-                    owner=orgOrUser, 
-                    repo=repo, 
+                    owner=orgOrUser,
+                    repo=repo,
                     hook=hook['id']
                 ))
     return hooks
-                
+
 def delete_hooks(orgOrUser, repoOrRepos, hook_type=None):
     hooks = list_hooks(orgOrUser, repoOrRepos, hook_type)
     url_templ = 'https://api.github.com/repos/{owner}/{repo}/hooks/{hook}'

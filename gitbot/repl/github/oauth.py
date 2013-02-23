@@ -13,4 +13,4 @@ def get_token(scopes, note):
         return res['token']
     else:
         raise Exception(r.text)
-    
+
