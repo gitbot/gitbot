@@ -1,7 +1,8 @@
-import requests
-from util import get_auth
 import json
 import urllib
+
+import requests
+from util import get_auth
 
 def trigger_action(proj, repo, branch, sha, event='push'):
     url_templ = 'http://api.gitbot.io/hooks/projects/{project}/trigger'
