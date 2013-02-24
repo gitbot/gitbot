@@ -1,5 +1,6 @@
 from collections import namedtuple
 from itertools import ifilter, groupby
+import operator
 
 import requests
 import yaml
@@ -31,9 +32,14 @@ def latest(version_name='precise', instance_type='ebs'):
 
     ami_list = ifilter(matcher, (amidata(*ami) for ami in ami_list))
 
-    def grouper(ami):
-        return (ami.region, '32' if ami.arch == 'i386' else '64')
+    reg = operator.attrgetter('region')
 
+    def arch(ami):
+        return '32' if ami.arch == 'i386' else '64'
 
-    return {region: {arch: group.next().id}
-                for (region, arch), group in groupby(ami_list, key=grouper)}
+    def agrouper(rgroup):
+        return {arch: agroup.next().id
+                    for arch, agroup in groupby(rgroup, key=arch)}
+
+    return {region: agrouper(rgroup)
+                for region, rgroup in groupby(ami_list, key=reg)}
