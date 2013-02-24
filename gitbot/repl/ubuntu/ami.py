@@ -1,6 +1,7 @@
 from collections import namedtuple
 from itertools import ifilter, groupby
 import operator
+import re
 
 import requests
 import yaml
@@ -13,8 +14,8 @@ amidata = namedtuple('amidata', [
     'arch',
     'instance_type',
     'release_date',
-    'url',
-    'id'
+    'ami_url',
+    'aki_id'
 ])
 
 def latest(version_name='precise', instance_type='ebs'):
@@ -37,8 +38,13 @@ def latest(version_name='precise', instance_type='ebs'):
     def arch(ami):
         return '32' if ami.arch == 'i386' else '64'
 
+    def ami_id(agroup):
+        anchor = agroup.next().ami_url
+        return re.match(r'.*>([^<>]*)<.*', anchor).group(1)
+
+
     def agrouper(rgroup):
-        return {arch: agroup.next().id
+        return {arch: ami_id(agroup)
                     for arch, agroup in groupby(rgroup, key=arch)}
 
     return {region: agrouper(rgroup)
