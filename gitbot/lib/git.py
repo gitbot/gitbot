@@ -23,10 +23,13 @@ class Tree(object):
         out = self.git.get('ls-remote', self.repo, self.branch_name, cwd='.')
         return out.split()[0]
 
+    def get_branch(self):
+        return self.git.get('rev-parse', '--abbrev-ref', 'HEAD')
+
     def get_revision(self, ref=None, short=True):
         self.ensure_source_exists()
-        return self.git.get('rev-parse', 
-            '--short' if short else '', 
+        return self.git.get('rev-parse',
+            '--short' if short else '',
             ref or 'HEAD').strip()
 
     def get_last_committed(self, ref=None):
@@ -38,23 +41,32 @@ class Tree(object):
 
     def ensure_repo_exists(self):
         if not self.repo:
-            raise Exception('This tree [%s] does not have a repo.' 
+            raise Exception('This tree [%s] does not have a repo.'
                                 % self.source.path)
 
     def ensure_source_exists(self):
         if not self.source.exists:
-            raise Exception('The source directory [%s] is missing.' 
+            raise Exception('The source directory [%s] is missing.'
                                 % self.source.path)
 
     def ensure_source_does_not_exist(self):
         if self.source.exists:
-            raise Exception('The source directory [%s] exists already.' 
+            raise Exception('The source directory [%s] exists already.'
                                 % self.source.path)
 
     def make(self, bare=False):
         self.ensure_source_exists()
         logger.info('Initializing git...')
         self.git.call('init', '--bare' if bare else None)
+
+    def make_ref(self, ref, sha='HEAD'):
+        self.ensure_source_exists()
+        logger.info(
+            'Creating a ref (%s) to commit (%s)...' % (
+                    ref,
+                    sha
+                ))
+        self.git.call('update-ref', ref, sha)
 
     def add_remote(self):
         self.ensure_source_exists()
@@ -81,10 +93,10 @@ class Tree(object):
                         cwd=self.source.parent.path)
         self.checkout()
 
-    def checkout(self):
+    def checkout(self, ref=None):
         self.ensure_source_exists()
-        logger.info('Checking out %s...' % self.branch_name)
-        self.git.call('checkout', self.branch_name)
+        logger.info('Checking out %s...' % ref or self.branch_name)
+        self.git.call('checkout', ref or self.branch_name)
 
     def new_branch(self, branch_name):
         logger.info('Setting up new branch %s...' % self.branch_name)
@@ -115,14 +127,28 @@ class Tree(object):
         logger.info('Fetching source...')
         self.git.call('fetch', self.remote)
 
-    def push(self, force=False, set_upstream=False):
+    def fetch_ref(self, ref, local=None, checkout=True, notags=False):
+        if not self.source.exists:
+            self.source.make()
+            self.make()
+            self.add_remote()
+        logger.info('Fetching ref...')
+        self.git.call('fetch',
+                            '-n' if notags else '',
+                            self.remote,
+                            ref + (':' + local) if local else '')
+        if local:
+            self.checkout(local)
+
+    def push(self, force=False, set_upstream=False, ref=None):
         self.ensure_source_exists()
         logger.info('Pushing changes...')
+        push_ref = ref or self.branch_name
         self.git.call('push',
                 '-f' if force else None,
                 '-u' if set_upstream else None,
                 self.remote,
-                self.branch_name)
+                push_ref)
 
     def reset(self, hard=True):
         self.ensure_source_exists()

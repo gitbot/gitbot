@@ -103,6 +103,30 @@ def test_fetch():
         assert local_repo2.get_revision() == revision
         assert local_repo2.get_last_committed() == modified
 
+
+def test_fetch_ref():
+    new_css = 'body { background-color: white; }'
+    new_branch = 'new_css'
+    local_repo1.new_branch(new_branch)
+    revision = None
+    with local_repo1.branch(new_branch):
+        File(GIT_TEST_DIR1.child(CSS_FILE)).write(new_css)
+        local_repo1.commit('Changed background-color')
+        local_repo1.push()
+
+        revision = local_repo1.get_revision(short=False)
+        modified = local_repo1.get_last_committed()
+        local_repo1.make_ref('refs/test/testref', revision)
+        local_repo1.push(ref='refs/test/testref')
+    GIT_TEST_DIR2.delete()
+    local_repo2 = Tree(GIT_TEST_DIR2, GIT_REMOTE)
+    local_repo2.fetch_ref('refs/test/testref', 'localrev')
+    css = File(GIT_TEST_DIR2.child(CSS_FILE)).read_all()
+    assert css == new_css
+    assert local_repo2.get_revision(short=False) == revision
+    assert local_repo2.get_last_committed() == modified
+
+
 @with_setup(teardown=clean)
 def test_get_revision_remote():
     test_tree = Tree(GIT_TEST_DIR2, GIT_REMOTE)
