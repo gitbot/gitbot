@@ -2,9 +2,12 @@ from commando.util import ShellCommand, getLoggerWithConsoleHandler
 from contextlib import contextmanager
 from datetime import datetime
 from fswrap import Folder
+from subprocess import CalledProcessError
 
 
 logger = getLoggerWithConsoleHandler('gitbot.lib.git')
+
+class GitbotGitException(StandardError): pass
 
 
 class Tree(object):
@@ -30,28 +33,28 @@ class Tree(object):
         self.ensure_source_exists()
         return self.git.get('rev-parse',
             '--short' if short else '',
-            ref or 'HEAD').strip()
+            (ref or 'HEAD')).strip()
 
     def get_last_committed(self, ref=None):
         self.ensure_source_exists()
         modified = self.git.get('log',
-                                ref or 'HEAD',
+                                (ref or 'HEAD'),
                                 '-1', '--pretty=format:%ad', '--date=local')
         return datetime.strptime(modified, '%a %b %d %H:%M:%S %Y')
 
     def ensure_repo_exists(self):
         if not self.repo:
-            raise Exception('This tree [%s] does not have a repo.'
+            raise GitbotGitException('This tree [%s] does not have a repo.'
                                 % self.source.path)
 
     def ensure_source_exists(self):
         if not self.source.exists:
-            raise Exception('The source directory [%s] is missing.'
+            raise GitbotGitException('The source directory [%s] is missing.'
                                 % self.source.path)
 
     def ensure_source_does_not_exist(self):
         if self.source.exists:
-            raise Exception('The source directory [%s] exists already.'
+            raise GitbotGitException('The source directory [%s] exists already.'
                                 % self.source.path)
 
     def make(self, bare=False):
@@ -90,13 +93,14 @@ class Tree(object):
                         '1' if tip_only else None,
                         '--branch' if tip_only else None,
                         self.branch_name if tip_only else None,
+                        '--single-branch' if tip_only else None,
                         cwd=self.source.parent.path)
         self.checkout()
 
     def checkout(self, ref=None):
         self.ensure_source_exists()
-        logger.info('Checking out %s...' % ref or self.branch_name)
-        self.git.call('checkout', ref or self.branch_name)
+        logger.info('Checking out %s...' % (ref or self.branch_name))
+        self.git.call('checkout', (ref or self.branch_name))
 
     def new_branch(self, branch_name):
         logger.info('Setting up new branch %s...' % self.branch_name)
@@ -114,7 +118,7 @@ class Tree(object):
     def pull(self, tip_only=False):
         if self.source.exists:
             if self.has_changes(check_remote=False):
-                raise Exception(
+                raise GitbotGitException(
                     'Source [%s] has changes. Please sync it with the remote.'
                         % self.source)
             logger.info('Pulling remote changes ...')
@@ -143,12 +147,29 @@ class Tree(object):
     def push(self, force=False, set_upstream=False, ref=None):
         self.ensure_source_exists()
         logger.info('Pushing changes...')
-        push_ref = ref or self.branch_name
+        push_ref = (ref or self.branch_name)
         self.git.call('push',
                 '-f' if force else None,
                 '-u' if set_upstream else None,
                 self.remote,
                 push_ref)
+
+    def merge(self, ref, ff_only=True):
+        self.ensure_source_exists()
+        self.checkout()
+        try:
+            self.git.get('merge',
+                '--ff-only' if ff_only else None,
+                ref)
+        except CalledProcessError, called:
+            message = None
+            if ff_only:
+                message = 'Cannot fast forward the merge.'
+            else:
+                message = 'Conflicts detected. Unable to merge.'
+            logger.error(called.output)
+            raise GitbotGitException(message)
+
 
     def reset(self, hard=True):
         self.ensure_source_exists()
@@ -165,14 +186,19 @@ class Tree(object):
     def add(self, what=None):
         self.ensure_source_exists()
         logger.info('Adding new files...')
-        self.git.call('add', what or '.')
+        self.git.call('add', (what or '.'))
 
     def commit(self, message, add=True):
         self.ensure_source_exists()
         logger.info('Committing changes...')
         if add:
             self.add()
-        self.git.call('commit', '-a', '-m', message)
+        try:
+            self.git.get('commit', '-a', '-m', message)
+        except CalledProcessError, called:
+            logger.error(called.output)
+            raise GitbotGitException('Nothing to commit.')
+
 
     def has_changes(self, check_remote=True):
         self.ensure_source_exists()
@@ -198,7 +224,7 @@ class Tagger(object):
 
     def __init__(self, tree):
         if not tree:
-            raise Exception('You must provide a valid tree object')
+            raise GitbotGitException('You must provide a valid tree object')
         self.tree = tree
         self.git = ShellCommand(cwd=self.tree.source.path, cmd='git')
 
@@ -219,7 +245,7 @@ class Tagger(object):
         logger.info('Adding tag...')
 
         if self.check(tag):
-            raise Exception('The specified tag already exists')
+            raise GitbotGitException('The specified tag already exists')
 
         if message:
             self.git.call('tag', tag, '-a', '-m', message)

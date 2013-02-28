@@ -13,12 +13,12 @@ def list_status(orgOrUser, repo, sha):
     for status in res:
         statuses.append(dict(
             id=status['id'],
-            state=status['state'], 
+            state=status['state'],
             target_url=status['target_url'],
             description=status['description']
         ))
     return statuses
-                
+
 def add_status(orgOrUser, repo, sha, data):
     url_templ = 'https://api.github.com/repos/{owner}/{repo}/statuses/{sha}'
     auth = HTTPBasicAuth(*get_auth())

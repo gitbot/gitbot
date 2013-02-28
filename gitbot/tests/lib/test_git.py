@@ -5,8 +5,8 @@ Use nose
 `$ nosetests`
 """
 
-from gitbot.lib.git import Tree
-from nose.tools import with_setup
+from gitbot.lib.git import GitbotGitException, Tree
+from nose.tools import with_setup, raises
 from fswrap import File, Folder
 import tempfile
 
@@ -75,6 +75,7 @@ def teardown_module():
     GIT_REMOTE_DIR.parent.delete()
 
 
+
 def reset():
     local_repo1.reset()
     local_repo2.reset()
@@ -104,6 +105,7 @@ def test_fetch():
         assert local_repo2.get_last_committed() == modified
 
 
+@with_setup(teardown=clean)
 def test_fetch_ref():
     new_css = 'body { background-color: white; }'
     new_branch = 'new_css'
@@ -126,6 +128,122 @@ def test_fetch_ref():
     assert local_repo2.get_revision(short=False) == revision
     assert local_repo2.get_last_committed() == modified
 
+@with_setup(teardown=clean)
+def test_merge():
+    new_css = 'body { background-color: white; }'
+    new_branch = 'new_css'
+    local_repo1.new_branch(new_branch)
+    revision = None
+    with local_repo1.branch(new_branch):
+        File(GIT_TEST_DIR1.child(CSS_FILE)).write(new_css)
+        local_repo1.commit('Changed background-color')
+        local_repo1.push()
+        revision = local_repo1.get_revision()
+        modified = local_repo1.get_last_committed()
+    local_repo2.fetch()
+    local_repo2.merge('origin/' + new_branch)
+    css = File(GIT_TEST_DIR2.child(CSS_FILE)).read_all()
+    assert css == new_css
+    assert local_repo2.get_revision() == revision
+    assert local_repo2.get_last_committed() == modified
+
+@with_setup(teardown=clean)
+def test_merge_noff():
+    new_css = 'body { background-color: white; }'
+    new_branch = 'new_css'
+    local_repo1.new_branch(new_branch)
+    revision = None
+    with local_repo1.branch(new_branch):
+        File(GIT_TEST_DIR1.child(CSS_FILE)).write(new_css)
+        local_repo1.commit('Changed background-color')
+        local_repo1.push()
+        revision = local_repo1.get_revision()
+        modified = local_repo1.get_last_committed()
+    local_repo2.new_branch(new_branch)
+    new_js = '$(function(){ console.log("All done."); });'
+    with local_repo2.branch(new_branch):
+        File(GIT_TEST_DIR2.child(JS_FILE)).write(new_js)
+        local_repo2.commit('Removed debug alert')
+    local_repo2.fetch()
+    with local_repo2.branch(new_branch):
+        local_repo2.merge('origin/' + new_branch, ff_only=False)
+        css = File(GIT_TEST_DIR2.child(CSS_FILE)).read_all()
+        assert css == new_css
+        js = File(GIT_TEST_DIR2.child(JS_FILE)).read_all()
+        assert js == new_js
+
+@with_setup(teardown=clean)
+@raises(GitbotGitException)
+def test_merge_noff_fail():
+    new_css = 'body { background-color: white; }'
+    new_branch = 'new_css'
+    local_repo1.new_branch(new_branch)
+    revision = None
+    with local_repo1.branch(new_branch):
+        File(GIT_TEST_DIR1.child(CSS_FILE)).write(new_css)
+        local_repo1.commit('Changed background-color')
+        local_repo1.push()
+        revision = local_repo1.get_revision()
+        modified = local_repo1.get_last_committed()
+    local_repo2.new_branch(new_branch)
+    new_css2 = 'body.page { background-color: black; }'
+    with local_repo2.branch(new_branch):
+        File(GIT_TEST_DIR2.child(CSS_FILE)).write(new_css2)
+        local_repo2.commit('Changed background-color')
+    local_repo2.fetch()
+    with local_repo2.branch(new_branch):
+        local_repo2.merge('origin/' + new_branch, ff_only=False)
+
+@with_setup(teardown=clean)
+def test_merge_ff():
+    new_css = 'body { background-color: white; }'
+    new_branch = 'new_css'
+    local_repo1.new_branch(new_branch)
+    revision = None
+    with local_repo1.branch(new_branch):
+        File(GIT_TEST_DIR1.child(CSS_FILE)).write(new_css)
+        local_repo1.commit('Changed background-color')
+        local_repo1.push()
+        revision = local_repo1.get_revision()
+        modified = local_repo1.get_last_committed()
+    local_repo2.fetch()
+    local_repo2.new_branch(new_branch)
+    new_js = '$(function(){ console.log("All done."); });'
+    with local_repo2.branch(new_branch):
+        local_repo2.merge('origin/' + new_branch, ff_only=True)
+        css = File(GIT_TEST_DIR2.child(CSS_FILE)).read_all()
+        assert css == new_css
+        File(GIT_TEST_DIR2.child(JS_FILE)).write(new_js)
+        local_repo2.commit('Removed debug alert')
+        local_repo2.push()
+    local_repo1.fetch()
+    with local_repo1.branch(new_branch):
+        local_repo1.merge('origin/' + new_branch, ff_only=True)
+        js = File(GIT_TEST_DIR1.child(JS_FILE)).read_all()
+        assert js == new_js
+
+
+@with_setup(teardown=clean)
+@raises(GitbotGitException)
+def test_merge_ff_fail():
+    new_css = 'body { background-color: white; }'
+    new_branch = 'new_css'
+    local_repo1.new_branch(new_branch)
+    revision = None
+    with local_repo1.branch(new_branch):
+        File(GIT_TEST_DIR1.child(CSS_FILE)).write(new_css)
+        local_repo1.commit('Changed background-color')
+        local_repo1.push()
+        revision = local_repo1.get_revision()
+        modified = local_repo1.get_last_committed()
+    local_repo2.new_branch(new_branch)
+    new_css2 = 'body.page { background-color: black; }'
+    with local_repo2.branch(new_branch):
+        File(GIT_TEST_DIR2.child(CSS_FILE)).write(new_css2)
+        local_repo2.commit('Changed background-color')
+    local_repo2.fetch()
+    with local_repo2.branch(new_branch):
+        local_repo2.merge('origin/' + new_branch, ff_only=True)
 
 @with_setup(teardown=clean)
 def test_get_revision_remote():
