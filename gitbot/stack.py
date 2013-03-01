@@ -158,8 +158,9 @@ def publish_stack(config, params=None, debug=False, wait=False):
             raise bse
 
     if wait:
-        __wait_while_status(cf, 
+        __wait_while_status(cf,
             'CREATE_IN_PROGRESS' if not update else 'UPDATE_IN_PROGRESS')
+    return stack_name
 
 
 def __wait_while_status(cf, status):
