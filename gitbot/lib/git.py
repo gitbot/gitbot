@@ -157,7 +157,7 @@ class Tree(object):
     def merge(self, ref, ff_only=True):
         self.ensure_source_exists()
         self.checkout()
-        logger.info('Merging %s into 5s...' % (ref, self.branch_name))
+        logger.info('Merging %s into %s...' % (ref, self.branch_name))
         try:
             self.git.get('merge',
                 '--ff-only' if ff_only else None,
