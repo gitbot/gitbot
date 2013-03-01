@@ -24,7 +24,7 @@ setup(name=PROJECT,
           'fswrap',
           'pyyaml',
           'jinja2',
-          'pyparsing',
+          'pyparsing<2.0.0',
           'boto'
       ),
       tests_require=(

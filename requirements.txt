@@ -1,7 +1,7 @@
 commando
 fswrap
 jinja2
-pyparsing
+pyparsing<2.0.0
 pyyaml
 requests
 boto
