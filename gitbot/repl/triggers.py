@@ -37,11 +37,9 @@ def trigger_pull_action(proj, repo, number):
     if r.status_code / 100 != 2:
         raise Exception('Cannot get the pull request', r.text)
 
-    res = r.json()
+    pull_request = r.json()
 
     # Call trigger action
-
-    pull_request = res['pull_request']
     base = pull_request['base']
     head = pull_request['head']
     data = dict(
@@ -50,9 +48,9 @@ def trigger_pull_action(proj, repo, number):
         branch=base['ref'].replace('refs/heads/',''),
         sha=base['sha'],
         ref=base['ref'],
-        event='pull_request',
-        praction=res['action'],
-        number=res['number'],
+        event='pull-request',
+        praction='synchronize',
+        number=pull_request['number'],
         source=dict(
             repo=head['repo']['full_name'],
             branch=head['ref'].replace('refs/heads/',''),
