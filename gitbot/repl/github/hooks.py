@@ -16,7 +16,7 @@ def list_hooks(orgOrUser, repoOrRepos, hook_type=None):
         for hook in res:
             if not hook_type or hook['name'] == hook_type:
                 hooks.append(dict(
-                    owner=orgOrUser,
+                    events=hook['events'],
                     repo=repo,
                     hook=hook['id']
                 ))

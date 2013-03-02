@@ -48,7 +48,7 @@ def trigger_pull_action(proj, repo, number):
         branch=base['ref'].replace('refs/heads/',''),
         sha=base['sha'],
         ref=base['ref'],
-        event='pull-request',
+        event='pull_request',
         praction='synchronize',
         number=pull_request['number'],
         source=dict(
