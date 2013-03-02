@@ -49,3 +49,5 @@ def latest(version_name='precise', instance_type='ebs'):
 
     return {region: agrouper(rgroup)
                 for region, rgroup in groupby(ami_list, key=reg)}
+
+__all__ = ['latest']

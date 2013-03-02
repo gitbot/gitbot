@@ -1,6 +1,9 @@
+import json
+
 import requests
 from requests.auth import HTTPBasicAuth
 from util import get_auth
+
 
 def list_status(orgOrUser, repo, sha):
     url_templ = 'https://api.github.com/repos/{owner}/{repo}/statuses/{sha}'
@@ -28,3 +31,5 @@ def add_status(orgOrUser, repo, sha, data):
         return list_status(orgOrUser, repo, sha)
     else:
         raise Exception(r.text)
+
+__all__ = ['add_status', 'list_status']

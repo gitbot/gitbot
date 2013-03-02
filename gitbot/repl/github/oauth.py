@@ -14,3 +14,4 @@ def get_token(scopes, note):
     else:
         raise Exception(r.text)
 
+__all__ = ['get_token']

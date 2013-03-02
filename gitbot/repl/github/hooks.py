@@ -30,4 +30,5 @@ def delete_hooks(orgOrUser, repoOrRepos, hook_type=None):
         url = url_templ.format(**hook)
         r = requests.delete(url, auth=auth)
 
+__all__ = ['list_hooks', 'delete_hooks']
 
