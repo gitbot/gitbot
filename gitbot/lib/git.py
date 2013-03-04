@@ -93,7 +93,6 @@ class Tree(object):
                         '1' if tip_only else None,
                         '--branch' if tip_only else None,
                         self.branch_name if tip_only else None,
-                        '--single-branch' if tip_only else None,
                         cwd=self.source.parent.path)
         self.checkout()
 
