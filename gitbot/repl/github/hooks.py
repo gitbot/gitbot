@@ -27,7 +27,7 @@ def delete_hooks(orgOrUser, repoOrRepos, hook_type=None):
     url_templ = 'https://api.github.com/repos/{owner}/{repo}/hooks/{hook}'
     auth = HTTPBasicAuth(*get_auth())
     for hook in hooks:
-        url = url_templ.format(**hook)
+        url = url_templ.format(owner=orgOrUser, **hook)
         r = requests.delete(url, auth=auth)
 
 __all__ = ['list_hooks', 'delete_hooks']
