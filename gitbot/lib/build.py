@@ -294,6 +294,21 @@ class Project(AutoProp):
         context['project_name'] = project_name
         return cls._load(project_name, env, context, conf_path)
 
-
+    @classmethod
+    def load_with_trigger(cls, trigger, conf_path=None):
+        try:
+            env = trigger['action']['env']
+        except KeyError:
+            env = 'adhoc'
+        trigger = ConfigDict(trigger)
+        project_name = trigger.action.component_name
+        project = cls.load(project_name, env, trigger, conf_path)
+        project.config.main = True
+        project.config.trigger = trigger
+        project.config.fetch = trigger.fetch
+        project.config.sha = trigger.sha
+        project.config.ref = trigger.ref
+        project.config.branch = trigger.branch
+        return project
 
 __all__ = ['Project']
