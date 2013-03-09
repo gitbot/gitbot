@@ -1,9 +1,8 @@
 from commando.conf import ConfigDict
 from fswrap import File, Folder
-from functools import reduce
 from gitbot.lib.yinja import load, transform
 import tempfile
-from util import compare, assert_dotted_key_matches
+from gitbot.tests.util import compare, assert_dotted_key_matches
 import yaml
 
 TEMP = Folder(tempfile.gettempdir())
@@ -29,7 +28,7 @@ yinja:
 
 
 def test_function():
-    
+
     from jinja2 import contextfunction
 
     @contextfunction
@@ -40,7 +39,7 @@ def test_function():
             "version": "5.0.1",
             "project": "yinja"
         }
-    
+
     yaml_text = \
 '''
 yinja:
@@ -57,7 +56,7 @@ yinja:
 
 
 def test_function_with_transform():
-    
+
     from jinja2 import contextfunction
 
     @contextfunction
@@ -68,7 +67,7 @@ def test_function_with_transform():
             "version": "5.0.1",
             "project": "yinja"
         }
-    
+
     yaml_text = \
 '''
 yinja:
@@ -102,7 +101,7 @@ def test_filter():
             "version": "5.0.1",
             "project": "yinja"
         }
-    
+
     yaml_text = \
 '''
 yinja:
@@ -115,7 +114,7 @@ yinja:
     result = result['yinja']
     assert result['text'] == 'project'
     assert result['text2'] == 'version'
-    assert result['url'] == 'http://example.com/yinja/5.0.1/'    
+    assert result['url'] == 'http://example.com/yinja/5.0.1/'
 
 def test_test():
     from jinja2 import contextfilter
@@ -132,7 +131,7 @@ def test_test():
             "version": "5.0.1",
             "project": "yinja"
         }
-    
+
     yaml_text = \
 '''
 yinja:
@@ -145,14 +144,14 @@ yinja:
     result = result['yinja']
     assert result['text'] == 'project'
     assert result['text2'] == 'version'
-    assert result['url'] == 'http://example.com/yinja/5.0.1/'        
+    assert result['url'] == 'http://example.com/yinja/5.0.1/'
 
     context['version'] = '3.0.0'
     result = load(yaml_text, context, jinja_env=env, patchable=False)
     result = result['yinja']
     assert result['text'] == 'project'
     assert result['text2'] == 'version'
-    assert result['url'] == 'http://example.com'        
+    assert result['url'] == 'http://example.com'
 
 p0 = HERE.child_file('p0.yaml')
 p1 = HERE.child_file('p1.yaml')
@@ -172,7 +171,7 @@ def test_patch_level1():
     assert_dotted_key_matches('projects.comp1.version_type', p1d, p1a)
     assert_dotted_key_matches('projects.comp2.version_type', p1d, p1a)
     assert_dotted_key_matches('projects.comp3.version_type', p0d, p1a)
-    
+
 
 def test_patch_level2():
     p2a = load(p2.path)
@@ -191,5 +190,5 @@ def test_patch_level2_no_patching():
     assert_dotted_key_matches('projects.comp2.version_type', p2d, p2a)
     assert_dotted_key_matches('projects.comp3.version_type', p2d, p2a)
     assert_dotted_key_matches('projects.comp1.version_type', ConfigDict(), p2a)
-    
+
 

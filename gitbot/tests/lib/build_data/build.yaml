@@ -1,0 +1,21 @@
+config:
+  domain: example.com
+  s3bucket: example.com
+projects:
+  proj1:
+    prefix: ''
+    type_name: gitbot.tests.lib.test_build.TestProj1
+    depends:
+      proj2: build
+      proj3: build
+  proj2:
+    type_name: gitbot.tests.lib.test_build.TestProj2or3
+    prefix: second
+    depends:
+      proj1: build
+  proj3:
+    domain: dev3.example.com
+    type_name: gitbot.tests.lib.test_build.TestProj2or3
+    prefix: third
+    depends:
+      proj2: build

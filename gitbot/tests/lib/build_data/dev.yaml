@@ -1,0 +1,15 @@
+patches: build.yaml
+config:
+  domain: dev.example.com
+  s3bucket: dev.example.com
+projects:
+  proj1:
+    depends:
+      proj2: dev
+      proj3: dev
+  proj2:
+    depends:
+      proj1: dev
+  proj3:
+    depends:
+      proj2: dev
