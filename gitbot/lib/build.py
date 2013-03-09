@@ -65,6 +65,7 @@ class Project(AutoProp):
             raise ValueError("project name is required")
         self.name = name
         self.config = ConfigDict(config or {})
+        self.config.work_root = self.config.get('work_root', 'out')
         self.env = env
         self.settings = settings
         self.conf_path = conf_path
@@ -89,18 +90,24 @@ class Project(AutoProp):
         return self._depends
 
 
+    @AutoProp.default
+    def work_root(self):
+        return self.config.get('work_root')
 
     @AutoProp.default
     def source_root(self):
-        return self.config.get('source_root')
+        return self.config.get('source_root',
+            Folder(self.work_root).child('sources'))
 
     @AutoProp.default
     def build_root(self):
-        return self.config.get('build_root')
+        return self.config.get('build_root',
+            Folder(self.work_root).child('dist'))
 
     @AutoProp.default
     def tools_root(self):
-        return self.config.get('tools_root')
+        return self.config.get('tools_root',
+            Folder(self.work_root).child('tools'))
 
     @AutoProp.default
     def dateformat(self):
