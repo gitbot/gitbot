@@ -133,9 +133,13 @@ class Project(AutoProp):
         return self.config.get('repo_owner')
 
     @AutoProp.default
+    def repo_name(self):
+        return self.config.get('repo_name', self.name)
+
+    @AutoProp.default
     def repo(self):
         return self.config.get('repo',
-                               '%s/%s/%s' % (self.repo_base, self.repo_owner, self.name))
+                '%s/%s/%s' % (self.repo_base, self.repo_owner, self.repo_name))
 
     @AutoProp.default
     def remote(self):
