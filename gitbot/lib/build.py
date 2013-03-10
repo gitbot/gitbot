@@ -33,21 +33,21 @@ class BuildException(Exception):
         super(BuildException, self).__init__(description, status)
 
 
-class BuildFailedException():
+class BuildFailedException(BuildException):
 
     def __init__(self, description):
         super(BuildFailedException, self).__init__(
                                     description,
                                     BuildStatus.Failed)
 
-class BuildErrorException():
+class BuildErrorException(BuildException):
 
     def __init__(self, description):
         super(BuildFailedException, self).__init__(
                                     description,
                                     BuildStatus.Error)
 
-class BuildConflictedException():
+class BuildConflictedException(BuildException):
 
     def __init__(self, description):
         super(BuildConflictedException, self).__init__(
