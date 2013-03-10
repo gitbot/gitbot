@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from datetime import datetime
+import os
 
 from commando.conf import AutoProp, ConfigDict
 from commando.util import load_python_object
@@ -65,7 +66,8 @@ class Project(AutoProp):
             raise ValueError("project name is required")
         self.name = name
         self.config = ConfigDict(config or {})
-        self.config.work_root = self.config.get('work_root', 'out')
+        self.config.work_root = self.config.get('work_root',
+                                    Folder(os.getcwd()).child('out'))
         self.env = env
         self.settings = settings
         self.conf_path = conf_path
