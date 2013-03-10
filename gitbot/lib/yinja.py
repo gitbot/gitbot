@@ -7,11 +7,11 @@ from jinja2 import Environment
 import yaml
 
 def _get_jinja2_env(jinja_env):
-    defaults = { 
-        'env': { 'trim_blocks': True }, 
-        'globals' : {}, 
-        'filters' : {}, 
-        'tests' : {} 
+    defaults = {
+        'env': { 'trim_blocks': True },
+        'globals' : {},
+        'filters' : {},
+        'tests' : {}
     }
     defaults.update(jinja_env or {})
     env = Environment(**defaults['env'])

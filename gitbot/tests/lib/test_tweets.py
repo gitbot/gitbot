@@ -6,7 +6,7 @@ Use nose
 """
 from fswrap import File
 from gitbot.lib.tweets import Tweeter, twokenize
-from util import assert_yaml_equals
+from gitbot.tests.util import assert_yaml_equals
 import yaml
 
 

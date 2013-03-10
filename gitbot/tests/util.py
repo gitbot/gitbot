@@ -1,7 +1,6 @@
 import difflib
 from itertools import izip
 import json
-from operator import itemgetter
 import yaml
 
 

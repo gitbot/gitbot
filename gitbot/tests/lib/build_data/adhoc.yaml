@@ -1,0 +1,17 @@
+{% set subdomain = (project_name~env)|lower -%}
+patches: build.yaml
+config:
+  domain: {{subdomain}}.example.com
+  s3bucket: {{subdomain}}.example.com
+projects:
+  proj1:
+    depends:
+      proj2: dev
+      proj3: stage
+  proj2:
+    depends:
+      proj1: dev
+  proj3:
+    domain: 3{{subdomain}}.example.com
+    depends:
+      proj2: dev

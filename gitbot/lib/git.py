@@ -7,7 +7,7 @@ from subprocess import CalledProcessError
 
 logger = getLoggerWithConsoleHandler('gitbot.lib.git')
 
-class GitbotGitException(StandardError): pass
+class GitException(Exception): pass
 
 
 class Tree(object):
@@ -44,17 +44,17 @@ class Tree(object):
 
     def ensure_repo_exists(self):
         if not self.repo:
-            raise GitbotGitException('This tree [%s] does not have a repo.'
+            raise GitException('This tree [%s] does not have a repo.'
                                 % self.source.path)
 
     def ensure_source_exists(self):
         if not self.source.exists:
-            raise GitbotGitException('The source directory [%s] is missing.'
+            raise GitException('The source directory [%s] is missing.'
                                 % self.source.path)
 
     def ensure_source_does_not_exist(self):
         if self.source.exists:
-            raise GitbotGitException('The source directory [%s] exists already.'
+            raise GitException('The source directory [%s] exists already.'
                                 % self.source.path)
 
     def make(self, bare=False):
@@ -117,7 +117,7 @@ class Tree(object):
     def pull(self, tip_only=False):
         if self.source.exists:
             if self.has_changes(check_remote=False):
-                raise GitbotGitException(
+                raise GitException(
                     'Source [%s] has changes. Please sync it with the remote.'
                         % self.source)
             logger.info('Pulling remote changes ...')
@@ -168,7 +168,7 @@ class Tree(object):
             else:
                 message = 'Conflicts detected. Unable to merge.'
             logger.error(called.output)
-            raise GitbotGitException(message)
+            raise GitException(message)
 
 
     def reset(self, hard=True):
@@ -197,7 +197,7 @@ class Tree(object):
             self.git.get('commit', '-a', '-m', message)
         except CalledProcessError, called:
             logger.error(called.output)
-            raise GitbotGitException('Nothing to commit.')
+            raise GitException('Nothing to commit.')
 
 
     def has_changes(self, check_remote=True):
@@ -224,7 +224,7 @@ class Tagger(object):
 
     def __init__(self, tree):
         if not tree:
-            raise GitbotGitException('You must provide a valid tree object')
+            raise GitException('You must provide a valid tree object')
         self.tree = tree
         self.git = ShellCommand(cwd=self.tree.source.path, cmd='git')
 
@@ -245,7 +245,7 @@ class Tagger(object):
         logger.info('Adding tag...')
 
         if self.check(tag):
-            raise GitbotGitException('The specified tag already exists')
+            raise GitException('The specified tag already exists')
 
         if message:
             self.git.call('tag', tag, '-a', '-m', message)

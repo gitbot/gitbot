@@ -5,7 +5,7 @@ Use nose
 `$ nosetests`
 """
 
-from gitbot.lib.git import GitbotGitException, Tree
+from gitbot.lib.git import GitException, Tree
 from nose.tools import with_setup, raises
 from fswrap import File, Folder
 import tempfile
@@ -152,13 +152,10 @@ def test_merge_noff():
     new_css = 'body { background-color: white; }'
     new_branch = 'new_css'
     local_repo1.new_branch(new_branch)
-    revision = None
     with local_repo1.branch(new_branch):
         File(GIT_TEST_DIR1.child(CSS_FILE)).write(new_css)
         local_repo1.commit('Changed background-color')
         local_repo1.push()
-        revision = local_repo1.get_revision()
-        modified = local_repo1.get_last_committed()
     local_repo2.new_branch(new_branch)
     new_js = '$(function(){ console.log("All done."); });'
     with local_repo2.branch(new_branch):
@@ -173,18 +170,15 @@ def test_merge_noff():
         assert js == new_js
 
 @with_setup(teardown=clean)
-@raises(GitbotGitException)
+@raises(GitException)
 def test_merge_noff_fail():
     new_css = 'body { background-color: white; }'
     new_branch = 'new_css'
     local_repo1.new_branch(new_branch)
-    revision = None
     with local_repo1.branch(new_branch):
         File(GIT_TEST_DIR1.child(CSS_FILE)).write(new_css)
         local_repo1.commit('Changed background-color')
         local_repo1.push()
-        revision = local_repo1.get_revision()
-        modified = local_repo1.get_last_committed()
     local_repo2.new_branch(new_branch)
     new_css2 = 'body.page { background-color: black; }'
     with local_repo2.branch(new_branch):
@@ -199,13 +193,10 @@ def test_merge_ff():
     new_css = 'body { background-color: white; }'
     new_branch = 'new_css'
     local_repo1.new_branch(new_branch)
-    revision = None
     with local_repo1.branch(new_branch):
         File(GIT_TEST_DIR1.child(CSS_FILE)).write(new_css)
         local_repo1.commit('Changed background-color')
         local_repo1.push()
-        revision = local_repo1.get_revision()
-        modified = local_repo1.get_last_committed()
     local_repo2.fetch()
     local_repo2.new_branch(new_branch)
     new_js = '$(function(){ console.log("All done."); });'
@@ -224,18 +215,15 @@ def test_merge_ff():
 
 
 @with_setup(teardown=clean)
-@raises(GitbotGitException)
+@raises(GitException)
 def test_merge_ff_fail():
     new_css = 'body { background-color: white; }'
     new_branch = 'new_css'
     local_repo1.new_branch(new_branch)
-    revision = None
     with local_repo1.branch(new_branch):
         File(GIT_TEST_DIR1.child(CSS_FILE)).write(new_css)
         local_repo1.commit('Changed background-color')
         local_repo1.push()
-        revision = local_repo1.get_revision()
-        modified = local_repo1.get_last_committed()
     local_repo2.new_branch(new_branch)
     new_css2 = 'body.page { background-color: black; }'
     with local_repo2.branch(new_branch):
