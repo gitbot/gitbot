@@ -279,7 +279,8 @@ class Project(AutoProp):
             settings = yinja.load(file_name, context=context)
             __ENV__[env] = settings
 
-        config = settings.config
+        config = ConfigDict()
+        config.update(settings.config)
         config.patch(settings.projects.get(project_name, dict()))
         project_type = config.get('type_name', 'gitbot.lib.build.Project')
         project_class = load_python_object(project_type)
