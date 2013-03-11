@@ -187,7 +187,7 @@ class Project(AutoProp):
     def pull(self, tip_only=False, pull_depends=False):
         self.tree.pull(tip_only)
         if pull_depends:
-            for dep in self.depends:
+            for dep in self.depends.itervalues():
                 dep.pull(tip_only=tip_only)
 
     def merge(self, ref):
@@ -211,7 +211,7 @@ class Project(AutoProp):
             date=datetime.utcnow())
         if self.depends:
             annotation += 'Uses: \n'
-        for project in self.depends:
+        for project in self.depends.itervalues():
             annotation += self.depends_template.format(
                 project=project.name,
                 revision=project.revision)
