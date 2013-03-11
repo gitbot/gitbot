@@ -212,9 +212,10 @@ class Project(AutoProp):
         if self.depends:
             annotation += 'Uses: \n'
         for project in self.depends.itervalues():
-            annotation += self.depends_template.format(
-                project=project.name,
-                revision=project.revision)
+            if project.config.needs_source:
+                annotation += self.depends_template.format(
+                    project=project.name,
+                    revision=project.revision)
         return annotation
 
     def get_route(self):
