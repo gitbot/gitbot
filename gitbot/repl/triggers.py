@@ -5,7 +5,17 @@ import requests
 from requests.auth import HTTPBasicAuth
 from util import get_auth
 
-def trigger_push_action(proj, repo, branch, sha):
+def trigger_push_action(proj, repo, branch, sha=None):
+    if not sha:
+        url_templ = 'https://api.github.com/repos/{repo}/git/refs/heads/{branch}'
+        url = url_templ.format(repo=repo, branch=branch)
+        auth = HTTPBasicAuth(*get_auth())
+        r = requests.get(url, auth=auth)
+        if r.status_code / 100 != 2:
+            raise Exception('Cannot get the branch', r.text)
+        ref = r.json()
+        sha = ref['object']['sha']
+
     url_templ = 'http://api.gitbot.io/hooks/projects/{project}/trigger'
     event = 'push'
     data = dict(
