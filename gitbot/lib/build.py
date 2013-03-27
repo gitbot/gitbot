@@ -124,14 +124,18 @@ class Project(AutoProp):
         return self.config.get('version')
 
     @AutoProp.default
+    def dir_name(self):
+        return self.config.get('dir_name', self.name)
+
+    @AutoProp.default
     def source_dir(self):
         return self.config.get('source_dir',
-                               '%s/%s' % (self.source_root, self.name))
+                               '%s/%s' % (self.source_root, self.dir_name))
 
     @AutoProp.default
     def build_dir(self):
         return self.config.get('build_dir',
-                               '%s/%s' % (self.build_root, self.name))
+                               '%s/%s' % (self.build_root, self.dir_name))
 
     @AutoProp.default
     def repo_base(self):

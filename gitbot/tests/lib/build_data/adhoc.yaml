@@ -9,6 +9,8 @@ projects:
       proj2: dev
       proj3: stage
   proj2:
+    dir_name: projx
+    repo_name: projy
     depends:
       proj1: dev
   proj3:

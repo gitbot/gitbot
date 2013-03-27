@@ -1,6 +1,7 @@
 config:
   domain: example.com
   s3bucket: example.com
+  repo_owner: bottest
 projects:
   proj1:
     prefix: ''

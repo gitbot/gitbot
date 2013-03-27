@@ -6,7 +6,7 @@ Use nose
 """
 
 from gitbot.lib.build import Project
-from fswrap import File
+from fswrap import File, Folder
 import yaml
 
 HERE = File(__file__).parent
@@ -55,6 +55,21 @@ def test_config_overrides():
     assert proj3.config.domain != proj1.config.domain
     assert proj3.subdomain == BUILD['projects']['proj3']['prefix'] + '.' \
                                 + proj3.config.domain
+
+def test_source_dir():
+    proj2 = Project.load('proj2', 'build', conf_path=CONF.path)
+    assert proj2.source_dir == Folder(proj2.source_root).child('proj2')
+    assert proj2.build_dir == Folder(proj2.build_root).child('proj2')
+    proj2 = Project.load('proj2', 'adhoc', conf_path=CONF.path)
+    assert proj2.source_dir == Folder(proj2.source_root).child('projx')
+    assert proj2.build_dir == Folder(proj2.build_root).child('projx')
+
+
+def test_repo():
+    proj2 = Project.load('proj2', 'build', conf_path=CONF.path)
+    assert proj2.repo == '%s/%s/%s' % (proj2.repo_base, proj2.repo_owner, 'proj2')
+    proj2 = Project.load('proj2', 'adhoc', conf_path=CONF.path)
+    assert proj2.repo == '%s/%s/%s' % (proj2.repo_base, proj2.repo_owner, 'projy')
 
 
 def test_multiple_environments_proj1():
