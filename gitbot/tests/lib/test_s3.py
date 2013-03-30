@@ -8,6 +8,9 @@ Use nose
 from fswrap import File, Folder
 from gitbot.lib.s3 import Bucket
 from nose.tools import with_setup, nottest
+import requests
+
+from datetime import datetime, timedelta
 import urllib2
 import time
 
@@ -37,6 +40,11 @@ def cleanup():
     except:
         pass
     data_folder.delete()
+
+@nottest
+def get_expires(timeout=60):
+    expires = datetime.utcnow() + timedelta(minutes=timeout)
+    return expires.strftime("%a, %d %b %Y %H:%M:%S GMT")
 
 
 @nottest
@@ -92,6 +100,51 @@ def test_etag():
     bucket.add_file(f, target_folder=home.name)
     key = bucket.bucket.get_key('home/index.html')
     assert bucket.check_etag(key, f)
+
+
+def assert_headers_present(url, headers):
+    res = requests.head(url)
+    print res.headers
+    for meta_name, value in headers.items():
+
+        assert meta_name.lower() in res.headers
+        assert res.headers[meta_name.lower()] == value
+
+@with_setup(cleanup)
+def test_expires():
+    bucket = new_bucket()
+    bucket.make()
+    bucket.set_policy()
+    bucket.serve()
+    content = '<h1>A new html file on S3</h1>'
+    data_folder.make()
+    f = File(data_folder.child('index.html'))
+    f.write(content)
+    home = Folder('/home')
+    headers = {"Expires":get_expires()}
+    bucket.add_file(f, target_folder=home.name, headers=headers)
+    assert_headers_present(bucket.get_url() + '/home/index.html', headers)
+
+@with_setup(cleanup)
+def test_expires_on_update():
+    bucket = new_bucket()
+    bucket.make()
+    bucket.set_policy()
+    bucket.serve()
+    content = '<h1>A new html file on S3</h1>'
+    data_folder.make()
+    f = File(data_folder.child('index.html'))
+    f.write(content)
+    home = Folder('/home')
+    headers = {"Expires":get_expires()}
+    bucket.add_file(f, target_folder=home.name, headers=headers)
+    assert_headers_present(bucket.get_url() + '/home/index.html', headers)
+
+    # Do it again with a different expires
+    headers = {"Expires":get_expires(300)}
+    bucket.add_file(f, target_folder=home.name, headers=headers)
+    assert_headers_present(bucket.get_url() + '/home/index.html', headers)
+
 
 
 @with_setup(cleanup)

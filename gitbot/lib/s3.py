@@ -93,16 +93,26 @@ class Bucket(object):
         target_folder = Folder(target_folder or '')
         target = target_folder.child(source.name)
         key = self.bucket.get_key(target)
+
         if check_etag and self.check_etag(key, source):
+            if key and headers:
+                # Update the headers if they are provided
+                metadata = key.metadata
+                metadata.update(headers)
+                key.copy(self.bucket_name, key, metadata, preserve_acl=True)
             logger.info("Skipping [%s]..." % source.name)
             return target
+
         if not key:
             key = Key(self.bucket, target)
 
         def progress_logger(done, all):
             logger.info('%f/%f transferred' % (done, all))
         logger.info('beginning transfer of %s' % target)
-        key.set_contents_from_filename(file_path.path, cb=progress_logger)
+        key.set_contents_from_filename(
+            file_path.path,
+            headers=headers,
+            cb=progress_logger)
         logger.info('transfer complete')
         return target
 
