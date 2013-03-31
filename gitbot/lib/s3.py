@@ -147,11 +147,20 @@ class Bucket(object):
             def visit_file(afile):
                 prefix = afile.parent.get_mirror(target_folder or '', source)
                 if not ignore(afile.name):
+                    f_acl = acl
+                    f_headers = headers
+
+                    if hasattr(acl, '__call__'):
+                        f_acl = acl(afile)
+
+                    if hasattr(headers, '__call__'):
+                        f_headers = headers(afile)
+
                     added = self.add_file(
                         afile,
                         target_folder=prefix,
-                        acl=acl,
-                        headers=headers)
+                        acl=f_acl,
+                        headers=f_headers)
                     added_files.append(added)
 
         for key in self.bucket.list(prefix=target_folder or ''):

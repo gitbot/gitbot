@@ -197,7 +197,7 @@ def test_mime_type():
 
 
 @nottest
-def upload_folder(bucket, skip_css=False):
+def upload_folder(bucket, skip_css=False, headers=None):
     data_folder.make()
     html_content = '<h1>A new html file on S3</h1>'
     css_content = 'body:after { content: "new css"; }'
@@ -212,7 +212,7 @@ def upload_folder(bucket, skip_css=False):
     js = File(data_folder.child_folder('media/js').child('site.js'))
     js.parent.make()
     js.write(js_content)
-    bucket.add_folder(data_folder)
+    bucket.add_folder(data_folder, headers=headers)
     return (html_content, css_content, js_content)
 
 
@@ -241,6 +241,31 @@ def test_add_new_folder():
     js = response.read()
     assert js == js_content
 
+@with_setup(cleanup)
+def test_add_folder_header_callback():
+    bucket = new_bucket()
+    bucket.make()
+    bucket.set_policy()
+    bucket.serve()
+    url = bucket.get_url()
+    def headers(afile):
+        if '/css/' in afile.path:
+            return {'Expires': 10}
+        elif '/js/' in afile.path:
+            return {'Expires': 20}
+        else:
+            return {'Expires': 30}
+
+    upload_folder(bucket, headers=headers)
+
+    res = requests.head(url + '/media/css/site.css')
+    assert res.headers['expires'] == '10'
+
+    res = requests.head(url + '/media/js/site.js')
+    assert res.headers['expires'] == '20'
+
+    res = requests.head(url + '/home')
+    assert res.headers['expires'] == '30'
 
 @with_setup(cleanup)
 def test_check_delete_overwrite():
