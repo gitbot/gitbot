@@ -99,6 +99,7 @@ class Bucket(object):
                 # Update the headers if they are provided
                 metadata = key.metadata
                 metadata.update(headers)
+                metadata['Content-Type'] = key.content_type
                 key.copy(self.bucket_name, key, metadata, preserve_acl=True)
             logger.info("Skipping [%s]..." % source.name)
             return target

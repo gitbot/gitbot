@@ -104,11 +104,18 @@ def test_etag():
 
 def assert_headers_present(url, headers):
     res = requests.head(url)
-    print res.headers
+    errors = []
     for meta_name, value in headers.items():
-
-        assert meta_name.lower() in res.headers
-        assert res.headers[meta_name.lower()] == value
+        name = meta_name.lower()
+        if not name in res.headers:
+            errors.append("Header [{0}] does not exist.".format(name))
+        if res.headers[name] != value:
+            errors.append("Header {0} does not match {1} != {2}".format(
+                name,
+                res.headers[meta_name.lower()],
+                value
+            ))
+    assert len(errors) == 0, unicode(errors)
 
 @with_setup(cleanup)
 def test_expires():
@@ -145,6 +152,32 @@ def test_expires_on_update():
     bucket.add_file(f, target_folder=home.name, headers=headers)
     assert_headers_present(bucket.get_url() + '/home/index.html', headers)
 
+
+@with_setup(cleanup)
+def test_updating_headers_does_not_overwrite_existing():
+    bucket = new_bucket()
+    bucket.make()
+    bucket.set_policy()
+    bucket.serve()
+    content = '<h1>A new html file on S3</h1>'
+    data_folder.make()
+    f = File(data_folder.child('index.html'))
+    f.write(content)
+    home = Folder('/home')
+    headers = {"Expires":get_expires()}
+    url = bucket.get_url() + '/home/index.html'
+    bucket.add_file(f, target_folder=home.name, headers=headers)
+    assert_headers_present(url, headers)
+
+    res = requests.head(url)
+    orig_headers = res.headers
+    del orig_headers['x-amz-id-2']
+    del orig_headers['x-amz-request-id']
+    del orig_headers['last-modified']
+    del orig_headers['date']
+
+    bucket.add_file(f, target_folder=home.name, headers=headers)
+    assert_headers_present(url, orig_headers)
 
 
 @with_setup(cleanup)
