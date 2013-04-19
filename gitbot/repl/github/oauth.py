@@ -1,7 +1,7 @@
 import json
 import requests
 from requests.auth import HTTPBasicAuth
-from util import get_auth
+from gitbot.repl.github.util import get_auth
 
 def get_token(scopes, note):
     auth = HTTPBasicAuth(*get_auth())

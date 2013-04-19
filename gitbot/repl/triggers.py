@@ -3,7 +3,7 @@ import urllib
 
 import requests
 from requests.auth import HTTPBasicAuth
-from util import get_auth
+from gitbot.repl.github.util import get_auth
 
 def trigger_push_action(proj, repo, branch, sha=None):
     if not sha:

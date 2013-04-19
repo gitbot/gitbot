@@ -1,6 +1,6 @@
 import requests
 from requests.auth import HTTPBasicAuth
-from util import get_auth
+from gitbot.repl.github.util import get_auth
 
 def list_hooks(orgOrUser, repoOrRepos, hook_type=None):
     url_templ = 'https://api.github.com/repos/{owner}/{repo}/hooks'
