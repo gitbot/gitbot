@@ -42,4 +42,5 @@ def test_twokenize():
 def test_favorites():
     tweeter = Tweeter(TEST_ACCOUNT)
     faves = tweeter.get_favorites()
+    print yaml.dump(faves)
     assert_yaml_equals(faves, FAVORITES)

@@ -1,6 +1,6 @@
 from fnmatch import fnmatch
 from fswrap import File, Folder
-from gitbot.util import getLoggerWithConsoleHandler
+from commando.util import getLoggerWithConsoleHandler
 
 logger = getLoggerWithConsoleHandler('gitbot.cat')
 

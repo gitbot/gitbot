@@ -197,7 +197,10 @@ def test_mime_type():
 
 
 @nottest
-def upload_folder(bucket, skip_css=False, headers=None):
+def upload_folder(bucket,
+    skip_css=False,
+    headers=None,
+    pre_existing_file_patterns=None):
     data_folder.make()
     html_content = '<h1>A new html file on S3</h1>'
     css_content = 'body:after { content: "new css"; }'
@@ -212,7 +215,9 @@ def upload_folder(bucket, skip_css=False, headers=None):
     js = File(data_folder.child_folder('media/js').child('site.js'))
     js.parent.make()
     js.write(js_content)
-    bucket.add_folder(data_folder, headers=headers)
+    bucket.add_folder(data_folder,
+        headers=headers,
+        pre_existing_file_patterns=pre_existing_file_patterns)
     return (html_content, css_content, js_content)
 
 
@@ -275,12 +280,29 @@ def test_check_delete_overwrite():
     bucket.serve()
     upload_folder(bucket)
     data_folder.delete()
-    html_content, \
-        css_content, \
-        js_content = upload_folder(bucket, skip_css=True)
+    upload_folder(bucket, skip_css=True)
     uploaded = []
     for key in bucket.bucket.list():
         uploaded.append(key.name)
     assert len(uploaded) == 2
     assert 'home/index.html' in uploaded
+    assert 'media/js/site.js' in uploaded
+
+@with_setup(cleanup)
+def test_check_delete_with_preexisting():
+    bucket = new_bucket()
+    bucket.make()
+    bucket.set_policy()
+    bucket.serve()
+    upload_folder(bucket)
+    data_folder.delete()
+    upload_folder(bucket,
+        skip_css=True,
+        pre_existing_file_patterns=['*css*'])
+    uploaded = []
+    for key in bucket.bucket.list():
+        uploaded.append(key.name)
+    assert len(uploaded) == 3
+    assert 'home/index.html' in uploaded
+    assert 'media/css/site.css' in uploaded
     assert 'media/js/site.js' in uploaded

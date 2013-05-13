@@ -123,18 +123,23 @@ class Bucket(object):
     def add_folder(self,
                         folder_path,
                         ignore_patterns=None,
+                        pre_existing_file_patterns=None,
                         target_folder=None,
                         acl='public-read',
                         headers=None):
         self.check_bucket()
+
+        def match_pattern(patterns, name):
+            if not patterns:
+                return False
+            return any(fnmatch(name, pattern)
+                for pattern in patterns)
+
         source = Folder(folder_path)
         added_files = []
         with source.walker as walker:
             def ignore(name):
-                if not ignore_patterns:
-                    return False
-                return any(fnmatch(name, pattern)
-                    for pattern in ignore_patterns)
+                return match_pattern(ignore_patterns, name)
 
             @walker.folder_visitor
             def visit_folder(folder):
@@ -163,6 +168,10 @@ class Bucket(object):
                         headers=f_headers)
                     added_files.append(added)
 
+        def is_pre_existing(name):
+            return match_pattern(pre_existing_file_patterns, name)
+
         for key in self.bucket.list(prefix=target_folder or ''):
-            if not key.name in added_files:
+            if not key.name in added_files and \
+                not is_pre_existing(key.name):
                 key.delete()
