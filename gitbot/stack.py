@@ -9,14 +9,17 @@ import json
 import time
 import yaml
 
+def connect_cf(region, **kwargs):
+    return connect_to_region(region, **kwargs)
 
-def validate_stack(config):
+def validate_stack(config, **kwargs):
     config, env, files = generator.render_project(config)
-    cf = connect_to_region(config.region)
+    cf = connect_cf(config.region, **kwargs)
     for rpath, (source, target) in files.iteritems():
         try:
             cf.validate_template(template_body=target.read_all())
         except Exception, e:
+            print e
             print 'Validation failed for template: [%s]' % rpath
             print e.error_message
             return (False, False, False)
@@ -57,8 +60,8 @@ def get_params(config):
     return result
 
 
-def upload_stack(config):
-    config, env, files = validate_stack(config)
+def upload_stack(config, **kwargs):
+    config, env, files = validate_stack(config, **kwargs)
     if not config:
         raise Exception('Invalid template.')
     bucket_name = config.publish.get('bucket', None)
@@ -68,7 +71,7 @@ def upload_stack(config):
     path = config.publish.get('path', None)
     if path:
         path = path.rstrip('/') + '/'
-    bucket = Bucket(bucket_name)
+    bucket = Bucket(bucket_name, **kwargs)
     bucket.make()
     result = {}
     url_format = 'http://{bucket_name}.s3.amazonaws.com/{path}{template_name}'
@@ -100,12 +103,12 @@ def _transform_params(context, params, uploaded):
     return result
 
 
-def publish_stack(config, params=None, debug=False, wait=False):
+def publish_stack(config, params=None, debug=False, wait=False, **kwargs):
     if isinstance(config, File):
         file_path = config.path
         config = yaml.load(config.read_all())
         config['file_path'] = file_path
-    uploaded = upload_stack(config)
+    uploaded = upload_stack(config, **kwargs)
     config = uploaded.config
     main_stack = _get_main_stack(uploaded.config, uploaded.files)
     try:
@@ -125,7 +128,7 @@ def publish_stack(config, params=None, debug=False, wait=False):
     region = config.publish.get('region', 'us-east-1')
 
     # Connect to cloud formation and create the stack
-    cf = connect_to_region(region)
+    cf = connect_cf(region, **kwargs)
     try:
         cf.describe_stacks(stack_name)
         update = True
@@ -173,9 +176,9 @@ def __wait_while_status(cf, status):
             break
 
 
-def get_outputs(stack_name, region='us-east-1', wait=False):
+def get_outputs(stack_name, region='us-east-1', wait=False, **kwargs):
     # Connect to cloud formation and create the stack
-    cf = connect_to_region(region)
+    cf = connect_cf(region, **kwargs)
     if wait:
         __wait_while_status(cf, 'CREATE_IN_PROGRESS')
     try:
@@ -185,9 +188,9 @@ def get_outputs(stack_name, region='us-east-1', wait=False):
     return {output.key: output.value for stack in result for output in stack.outputs}
 
 
-def delete_stack(stack_name, region='us-east-1', wait=False):
+def delete_stack(stack_name, region='us-east-1', wait=False, **kwargs):
     # Connect to cloud formation and create the stack
-    cf = connect_to_region(region)
+    cf = connect_cf(region, **kwargs)
     cf.delete_stack(stack_name)
     if wait:
         __wait_while_status(cf, 'DELETE_IN_PROGRESS')
